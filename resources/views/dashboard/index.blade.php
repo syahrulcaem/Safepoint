@@ -179,23 +179,26 @@
                         </a>
                     </div>
 
-                    @if($recentCases->count() > 0)
+                    @if ($recentCases->count() > 0)
                         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                             @foreach ($recentCases as $case)
                                 <div class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
                                     <div class="flex items-start justify-between mb-3">
                                         <div>
-                                            <a href="{{ route('cases.show', $case) }}" class="text-sm font-medium text-red-600 hover:text-red-500">
+                                            <a href="{{ route('cases.show', $case) }}"
+                                                class="text-sm font-medium text-red-600 hover:text-red-500">
                                                 {{ $case->short_id }}
                                             </a>
-                                            <p class="text-xs text-gray-500">{{ $case->created_at->format('d/m H:i') }}</p>
+                                            <p class="text-xs text-gray-500">{{ $case->created_at->format('d/m H:i') }}
+                                            </p>
                                         </div>
                                         <x-status-badge :status="$case->status" />
                                     </div>
 
                                     <div class="space-y-2">
                                         <div>
-                                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium
+                                            <span
+                                                class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium
                                                 {{ $case->category === 'MEDIS' ? 'bg-blue-100 text-blue-800' : '' }}
                                                 {{ $case->category === 'KEBAKARAN' ? 'bg-red-100 text-red-800' : '' }}
                                                 {{ $case->category === 'KRIMINAL' ? 'bg-purple-100 text-purple-800' : '' }}
@@ -203,16 +206,44 @@
                                                 {{ in_array($case->category, ['BENCANA_ALAM', 'BANJIR', 'POHON_TUMBANG']) ? 'bg-yellow-100 text-yellow-800' : '' }}
                                                 {{ in_array($case->category, ['KECELAKAAN', 'KEBOCORAN_GAS']) ? 'bg-orange-100 text-orange-800' : '' }}">
                                                 @switch($case->category)
-                                                    @case('MEDIS') Medis @break
-                                                    @case('KEBAKARAN') Kebakaran @break
-                                                    @case('KRIMINAL') Kriminal @break
-                                                    @case('UMUM') Umum @break
-                                                    @case('BENCANA_ALAM') Bencana Alam @break
-                                                    @case('KECELAKAAN') Kecelakaan @break
-                                                    @case('KEBOCORAN_GAS') Kebocoran Gas @break
-                                                    @case('POHON_TUMBANG') Pohon Tumbang @break
-                                                    @case('BANJIR') Banjir @break
-                                                    @default {{ $case->category }}
+                                                    @case('MEDIS')
+                                                        Medis
+                                                    @break
+
+                                                    @case('KEBAKARAN')
+                                                        Kebakaran
+                                                    @break
+
+                                                    @case('KRIMINAL')
+                                                        Kriminal
+                                                    @break
+
+                                                    @case('UMUM')
+                                                        Umum
+                                                    @break
+
+                                                    @case('BENCANA_ALAM')
+                                                        Bencana Alam
+                                                    @break
+
+                                                    @case('KECELAKAAN')
+                                                        Kecelakaan
+                                                    @break
+
+                                                    @case('KEBOCORAN_GAS')
+                                                        Kebocoran Gas
+                                                    @break
+
+                                                    @case('POHON_TUMBANG')
+                                                        Pohon Tumbang
+                                                    @break
+
+                                                    @case('BANJIR')
+                                                        Banjir
+                                                    @break
+
+                                                    @default
+                                                        {{ $case->category }}
                                                 @endswitch
                                             </span>
                                         </div>
@@ -221,10 +252,13 @@
                                             {{ Str::limit($case->location ?: $case->locator_text, 50) }}
                                         </p>
 
-                                        @if($case->assignedUnit)
+                                        @if ($case->assignedUnit)
                                             <div class="flex items-center text-xs text-gray-500">
-                                                <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                                                <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor"
+                                                    viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                        d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z">
+                                                    </path>
                                                 </svg>
                                                 {{ $case->assignedUnit->name }}
                                             </div>
@@ -235,14 +269,14 @@
                                                 {{ $case->created_at->diffForHumans() }}
                                             </span>
                                             <div class="flex space-x-2">
-                                                <a href="{{ route('cases.show', $case) }}" 
-                                                   class="text-xs text-red-600 hover:text-red-700 font-medium">
+                                                <a href="{{ route('cases.show', $case) }}"
+                                                    class="text-xs text-red-600 hover:text-red-700 font-medium">
                                                     Detail
                                                 </a>
-                                                @if($case->lat && $case->lon)
-                                                    <a href="https://www.google.com/maps?q={{ $case->lat }},{{ $case->lon }}" 
-                                                       target="_blank" 
-                                                       class="text-xs text-blue-600 hover:text-blue-700 font-medium">
+                                                @if ($case->lat && $case->lon)
+                                                    <a href="https://www.google.com/maps?q={{ $case->lat }},{{ $case->lon }}"
+                                                        target="_blank"
+                                                        class="text-xs text-blue-600 hover:text-blue-700 font-medium">
                                                         Maps
                                                     </a>
                                                 @endif
@@ -254,8 +288,11 @@
                         </div>
                     @else
                         <div class="text-center py-8">
-                            <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                            <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor"
+                                viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
+                                </path>
                             </svg>
                             <h3 class="mt-2 text-sm font-medium text-gray-900">Tidak ada kasus</h3>
                             <p class="mt-1 text-sm text-gray-500">Belum ada laporan kasus darurat.</p>
