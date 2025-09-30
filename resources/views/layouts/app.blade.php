@@ -36,6 +36,12 @@
                             class="text-gray-500 hover:text-red-600 px-3 py-2 rounded-md text-sm font-medium {{ request()->routeIs('cases.*') ? 'text-red-600 bg-red-50' : '' }}">
                             Kasus
                         </a>
+                        @if (auth()->check() && auth()->user()->role === 'SUPERADMIN')
+                            <a href="{{ route('users.index') }}"
+                                class="text-gray-500 hover:text-red-600 px-3 py-2 rounded-md text-sm font-medium {{ request()->routeIs('users.*') ? 'text-red-600 bg-red-50' : '' }}">
+                                Users
+                            </a>
+                        @endif
                     </div>
 
                     @auth

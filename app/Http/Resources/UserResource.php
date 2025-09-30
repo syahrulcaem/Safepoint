@@ -24,6 +24,9 @@ class UserResource extends JsonResource
             'citizen_profile' => $this->whenLoaded('citizenProfile', function () {
                 return [
                     'nik' => $this->citizenProfile->nik,
+                    'nomor_keluarga' => $this->citizenProfile->nomor_keluarga,
+                    'hubungan' => $this->citizenProfile->hubungan,
+                    'hubungan_display' => $this->citizenProfile->hubungan_display,
                     'ktp_image_url' => $this->citizenProfile->ktp_image_url,
                     'birth_date' => $this->citizenProfile->birth_date,
                     'age' => $this->citizenProfile->age,

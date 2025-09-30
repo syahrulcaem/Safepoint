@@ -55,7 +55,10 @@ class CaseController extends Controller
             });
         }
 
-        $cases = $query->orderBy('created_at', 'desc')->paginate(15)->withQueryString();
+        // Get per_page parameter, default to 10, max 100
+        $perPage = min((int) $request->get('per_page', 10), 100);
+
+        $cases = $query->orderBy('created_at', 'desc')->paginate($perPage)->withQueryString();
 
         $units = Unit::active()->orderBy('name')->get();
         $categories = ['UMUM', 'MEDIS', 'KEBAKARAN', 'KRIMINAL', 'BENCANA_ALAM', 'KECELAKAAN', 'KEBOCORAN_GAS', 'POHON_TUMBANG', 'BANJIR'];
@@ -88,6 +91,51 @@ class CaseController extends Controller
         $units = Unit::active()->orderBy('name')->get();
 
         return view('cases.show', compact('case', 'units'));
+    }
+
+    public function modal(Cases $case)
+    {
+        $case->load([
+            'reporterUser',
+            'assignedUnit',
+            'caseEvents' => function ($query) {
+                $query->orderBy('created_at', 'asc');
+            }
+        ]);
+
+        // Format timeline data
+        $timeline = $case->caseEvents->map(function ($event) {
+            return [
+                'event' => $event->action,
+                'created_at' => $event->created_at->toISOString(),
+                'notes' => $event->notes,
+                'metadata' => $event->metadata
+            ];
+        });
+
+        return response()->json([
+            'id' => $case->id,
+            'short_id' => $case->short_id,
+            'status' => $case->status,
+            'category' => $case->category,
+            'location' => $case->location,
+            'locator_text' => $case->locator_text,
+            'description' => $case->description,
+            'phone' => $case->phone,
+            'lat' => $case->lat,
+            'lon' => $case->lon,
+            'created_at' => $case->created_at->toISOString(),
+            'reporter_user' => $case->reporterUser ? [
+                'name' => $case->reporterUser->name,
+                'email' => $case->reporterUser->email
+            ] : null,
+            'assigned_unit' => $case->assignedUnit ? [
+                'name' => $case->assignedUnit->name,
+                'type' => $case->assignedUnit->type,
+                'phone' => $case->assignedUnit->phone
+            ] : null,
+            'timeline' => $timeline
+        ]);
     }
 
     public function verify(Cases $case)

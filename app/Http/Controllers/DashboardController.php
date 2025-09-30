@@ -27,10 +27,10 @@ class DashboardController extends Controller
             ->select('id', 'short_id', 'category', 'status', 'location', 'lat', 'lon', 'created_at')
             ->get();
 
-        // Get 10 latest cases
+        // Get 5 latest cases
         $recentCases = Cases::with(['reporterUser', 'assignedUnit'])
             ->orderBy('created_at', 'desc')
-            ->limit(10)
+            ->limit(5)
             ->get();
 
         // Total cases count

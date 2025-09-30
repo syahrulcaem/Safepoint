@@ -1,0 +1,179 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\User;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\Rule;
+
+class UserController extends Controller
+{
+    public function __construct()
+    {
+        $this->middleware('auth');
+        $this->middleware(function ($request, $next) {
+            if (auth()->user()->role !== 'SUPERADMIN') {
+                abort(403, 'Akses ditolak. Hanya Super Admin yang dapat mengelola users.');
+            }
+            return $next($request);
+        });
+    }
+
+    public function index()
+    {
+        $users = User::orderBy('created_at', 'desc')->paginate(15);
+
+        // Count users by role
+        $roleStats = [
+            'total' => User::count(),
+            'super_admin' => User::where('role', 'SUPERADMIN')->count(),
+            'admin' => User::where('role', 'ADMIN')->count(),
+            'operator' => User::where('role', 'OPERATOR')->count(),
+            'pimpinan' => User::where('role', 'PIMPINAN')->count(),
+        ];
+
+        return view('users.index', compact('users', 'roleStats'));
+    }
+
+    public function create()
+    {
+        $roles = [
+            'SUPER_ADMIN' => 'Super Admin',
+            'ADMIN' => 'Admin',
+            'OPERATOR' => 'Operator',
+            'USER' => 'User'
+        ];
+
+        return view('users.create', compact('roles'));
+    }
+
+    public function store(Request $request)
+    {
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|string|email|max:255|unique:users',
+            'phone' => 'nullable|string|max:20|unique:users',
+            'password' => 'required|string|min:8|confirmed',
+            'role' => 'required|in:SUPER_ADMIN,ADMIN,OPERATOR,USER',
+            'is_active' => 'boolean'
+        ], [
+            'name.required' => 'Nama harus diisi.',
+            'email.required' => 'Email harus diisi.',
+            'email.email' => 'Format email tidak valid.',
+            'email.unique' => 'Email sudah terdaftar.',
+            'phone.unique' => 'Nomor telepon sudah terdaftar.',
+            'password.required' => 'Password harus diisi.',
+            'password.min' => 'Password minimal 8 karakter.',
+            'password.confirmed' => 'Konfirmasi password tidak cocok.',
+            'role.required' => 'Role harus dipilih.',
+            'role.in' => 'Role tidak valid.',
+        ]);
+
+        User::create([
+            'name' => $request->name,
+            'email' => $request->email,
+            'phone' => $request->phone,
+            'password' => Hash::make($request->password),
+            'role' => $request->role,
+            'is_active' => $request->boolean('is_active', true),
+            'email_verified_at' => now(), // Auto verify for admin created users
+        ]);
+
+        return redirect()->route('users.index')
+            ->with('success', 'User berhasil dibuat.');
+    }
+
+    public function show(User $user)
+    {
+        return view('users.show', compact('user'));
+    }
+
+    public function edit(User $user)
+    {
+        $roles = [
+            'SUPER_ADMIN' => 'Super Admin',
+            'ADMIN' => 'Admin',
+            'OPERATOR' => 'Operator',
+            'USER' => 'User'
+        ];
+
+        return view('users.edit', compact('user', 'roles'));
+    }
+
+    public function update(Request $request, User $user)
+    {
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users')->ignore($user->id)],
+            'phone' => ['nullable', 'string', 'max:20', Rule::unique('users')->ignore($user->id)],
+            'password' => 'nullable|string|min:8|confirmed',
+            'role' => 'required|in:SUPER_ADMIN,ADMIN,OPERATOR,USER',
+            'is_active' => 'boolean'
+        ], [
+            'name.required' => 'Nama harus diisi.',
+            'email.required' => 'Email harus diisi.',
+            'email.email' => 'Format email tidak valid.',
+            'email.unique' => 'Email sudah terdaftar.',
+            'phone.unique' => 'Nomor telepon sudah terdaftar.',
+            'password.min' => 'Password minimal 8 karakter.',
+            'password.confirmed' => 'Konfirmasi password tidak cocok.',
+            'role.required' => 'Role harus dipilih.',
+            'role.in' => 'Role tidak valid.',
+        ]);
+
+        $data = [
+            'name' => $request->name,
+            'email' => $request->email,
+            'phone' => $request->phone,
+            'role' => $request->role,
+            'is_active' => $request->boolean('is_active', true),
+        ];
+
+        // Only update password if provided
+        if ($request->filled('password')) {
+            $data['password'] = Hash::make($request->password);
+        }
+
+        $user->update($data);
+
+        return redirect()->route('users.index')
+            ->with('success', 'User berhasil diupdate.');
+    }
+
+    public function destroy(User $user)
+    {
+        // Prevent super admin from deleting themselves
+        if ($user->id === auth()->id()) {
+            return redirect()->route('users.index')
+                ->with('error', 'Anda tidak dapat menghapus akun sendiri.');
+        }
+
+        // Prevent deleting the last super admin
+        if ($user->role === 'SUPER_ADMIN' && User::where('role', 'SUPER_ADMIN')->count() <= 1) {
+            return redirect()->route('users.index')
+                ->with('error', 'Tidak dapat menghapus Super Admin terakhir.');
+        }
+
+        $user->delete();
+
+        return redirect()->route('users.index')
+            ->with('success', 'User berhasil dihapus.');
+    }
+
+    public function toggleStatus(User $user)
+    {
+        // Prevent super admin from deactivating themselves
+        if ($user->id === auth()->id()) {
+            return redirect()->route('users.index')
+                ->with('error', 'Anda tidak dapat menonaktifkan akun sendiri.');
+        }
+
+        $user->update(['is_active' => !$user->is_active]);
+
+        $status = $user->is_active ? 'diaktifkan' : 'dinonaktifkan';
+
+        return redirect()->route('users.index')
+            ->with('success', "User berhasil {$status}.");
+    }
+}

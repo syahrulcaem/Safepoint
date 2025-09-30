@@ -29,6 +29,8 @@ class ProfileController extends Controller
             'email' => 'nullable|email|unique:users,email,' . $request->user()->id,
             'phone' => 'nullable|string|max:32|unique:users,phone,' . $request->user()->id,
             'nik' => 'nullable|string|max:32|unique:citizen_profiles,nik,' . $request->user()->id . ',user_id',
+            'nomor_keluarga' => 'nullable|string|max:50',
+            'hubungan' => 'nullable|in:KEPALA_KELUARGA,ISTRI,SUAMI,ANAK,AYAH,IBU,KAKEK,NENEK,CUCU,SAUDARA,LAINNYA',
             'birth_date' => 'nullable|date|before:today',
             'blood_type' => 'nullable|in:A,B,AB,O,UNKNOWN',
             'chronic_conditions' => 'nullable|string',
@@ -51,6 +53,8 @@ class ProfileController extends Controller
         // Update or create citizen profile
         $profileData = array_filter([
             'nik' => $request->nik,
+            'nomor_keluarga' => $request->nomor_keluarga,
+            'hubungan' => $request->hubungan,
             'birth_date' => $request->birth_date,
             'blood_type' => $request->blood_type,
             'chronic_conditions' => $request->chronic_conditions,

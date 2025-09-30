@@ -13,6 +13,8 @@ class CitizenProfile extends Model
     protected $fillable = [
         'user_id',
         'nik',
+        'nomor_keluarga',
+        'hubungan',
         'ktp_image_url',
         'birth_date',
         'blood_type',
@@ -49,5 +51,24 @@ class CitizenProfile extends Model
         ];
 
         return $types[$this->blood_type] ?? 'Tidak Diketahui';
+    }
+
+    public function getHubunganDisplayAttribute()
+    {
+        $hubungan = [
+            'KEPALA_KELUARGA' => 'Kepala Keluarga',
+            'ISTRI' => 'Istri',
+            'SUAMI' => 'Suami',
+            'ANAK' => 'Anak',
+            'AYAH' => 'Ayah',
+            'IBU' => 'Ibu',
+            'KAKEK' => 'Kakek',
+            'NENEK' => 'Nenek',
+            'CUCU' => 'Cucu',
+            'SAUDARA' => 'Saudara',
+            'LAINNYA' => 'Lainnya'
+        ];
+
+        return $hubungan[$this->hubungan] ?? 'Tidak Diketahui';
     }
 }
