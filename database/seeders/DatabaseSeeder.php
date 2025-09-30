@@ -17,6 +17,7 @@ class DatabaseSeeder extends Seeder
             UnitSeeder::class,
             AdminSeeder::class,
             SampleCaseSeeder::class,
+            CasesSeeder::class,
         ]);
     }
 }

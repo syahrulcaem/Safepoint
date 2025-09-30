@@ -12,10 +12,20 @@ class DashboardController extends Controller
         // Count cases by status
         $statusCounts = [
             'NEW' => Cases::where('status', 'NEW')->count(),
+            'VERIFIED' => Cases::where('status', 'VERIFIED')->count(),
             'DISPATCHED' => Cases::where('status', 'DISPATCHED')->count(),
+            'ON_THE_WAY' => Cases::where('status', 'ON_THE_WAY')->count(),
             'ON_SCENE' => Cases::where('status', 'ON_SCENE')->count(),
             'CLOSED' => Cases::where('status', 'CLOSED')->count(),
+            'CANCELLED' => Cases::where('status', 'CANCELLED')->count(),
         ];
+
+        // Get active cases for map (not CLOSED or CANCELLED)
+        $activeCases = Cases::whereNotIn('status', ['CLOSED', 'CANCELLED'])
+            ->whereNotNull('lat')
+            ->whereNotNull('lon')
+            ->select('id', 'short_id', 'category', 'status', 'location', 'lat', 'lon', 'created_at')
+            ->get();
 
         // Get 10 latest cases
         $recentCases = Cases::with(['reporterUser', 'assignedUnit'])
@@ -23,6 +33,9 @@ class DashboardController extends Controller
             ->limit(10)
             ->get();
 
-        return view('dashboard.index', compact('statusCounts', 'recentCases'));
+        // Total cases count
+        $totalCases = Cases::count();
+
+        return view('dashboard.index', compact('statusCounts', 'recentCases', 'activeCases', 'totalCases'));
     }
 }
