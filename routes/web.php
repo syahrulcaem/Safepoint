@@ -21,7 +21,8 @@ Route::middleware(['auth', 'web.role'])->group(function () {
     Route::get('/cases/{case}', [CaseController::class, 'show'])->name('cases.show');
 
     // Case Actions
-    Route::post('/cases/{case}/verify', [CaseActionController::class, 'verify'])->name('cases.verify');
-    Route::post('/cases/{case}/dispatch', [CaseActionController::class, 'dispatch'])->name('cases.dispatch');
-    Route::post('/cases/{case}/close', [CaseActionController::class, 'close'])->name('cases.close');
+    Route::post('/cases/{case}/verify', [CaseController::class, 'verify'])->name('cases.verify');
+    Route::post('/cases/{case}/dispatch', [CaseController::class, 'dispatch'])->name('cases.dispatch');
+    Route::post('/cases/{case}/close', [CaseController::class, 'close'])->name('cases.close');
+    Route::post('/cases/{case}/cancel', [CaseController::class, 'cancel'])->name('cases.cancel');
 });

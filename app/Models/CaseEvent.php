@@ -11,15 +11,15 @@ class CaseEvent extends Model
 
     protected $fillable = [
         'case_id',
-        'actor_type',
         'actor_id',
-        'event',
-        'meta',
+        'action',
+        'notes',
+        'metadata',
         'created_at',
     ];
 
     protected $casts = [
-        'meta' => 'array',
+        'metadata' => 'array',
         'created_at' => 'datetime',
     ];
 
