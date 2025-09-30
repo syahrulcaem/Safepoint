@@ -156,87 +156,111 @@
         </div>
 
         <!-- Map and Recent Cases -->
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <!-- Mapbox Map -->
-            <div class="lg:col-span-2">
-                <div class="bg-white shadow rounded-lg">
-                    <div class="px-4 py-5 sm:p-6">
-                        <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">
-                            Peta Kasus Aktif
-                        </h3>
-                        <div id="map" style="height: 400px;" class="rounded-lg"></div>
-                    </div>
+        <div class="space-y-6">
+            <!-- Mapbox Map - Full Width -->
+            <div class="bg-white shadow rounded-lg">
+                <div class="px-4 py-5 sm:p-6">
+                    <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">
+                        Peta Kasus Aktif
+                    </h3>
+                    <div id="map" style="height: 500px;" class="rounded-lg"></div>
                 </div>
             </div>
 
-            <!-- Recent Cases -->
-            <div class="lg:col-span-1">
-                <div class="bg-white shadow rounded-lg">
-                    <div class="px-4 py-5 sm:p-6">
-                        <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">
+            <!-- Recent Cases - Full Width Card Layout -->
+            <div class="bg-white shadow rounded-lg">
+                <div class="px-4 py-5 sm:p-6">
+                    <div class="flex justify-between items-center mb-6">
+                        <h3 class="text-lg leading-6 font-medium text-gray-900">
                             10 Kasus Terbaru
                         </h3>
-                        <div class="flow-root">
-                            <ul role="list" class="-mb-8">
-                                @foreach ($recentCases as $index => $case)
-                                    <li>
-                                        <div class="relative pb-8">
-                                            @if (!$loop->last)
-                                                <span class="absolute top-4 left-4 -ml-px h-full w-0.5 bg-gray-200"
-                                                    aria-hidden="true"></span>
-                                            @endif
-                                            <div class="relative flex space-x-3">
-                                                <div>
-                                                    <span
-                                                        class="h-8 w-8 rounded-full flex items-center justify-center ring-8 ring-white
-                                                        {{ $case->status === 'NEW' ? 'bg-red-500' : '' }}
-                                                        {{ $case->status === 'VERIFIED' ? 'bg-red-400' : '' }}
-                                                        {{ $case->status === 'DISPATCHED' ? 'bg-red-300' : '' }}
-                                                        {{ $case->status === 'ON_THE_WAY' ? 'bg-orange-400' : '' }}
-                                                        {{ $case->status === 'ON_SCENE' ? 'bg-green-500' : '' }}
-                                                        {{ $case->status === 'CLOSED' ? 'bg-gray-400' : '' }}
-                                                        {{ $case->status === 'CANCELLED' ? 'bg-red-800' : '' }}">
-                                                        <svg class="w-4 h-4 text-white" fill="currentColor"
-                                                            viewBox="0 0 20 20">
-                                                            <path fill-rule="evenodd"
-                                                                d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                                                                clip-rule="evenodd" />
-                                                        </svg>
-                                                    </span>
-                                                </div>
-                                                <div class="min-w-0 flex-1 pt-1.5 flex justify-between space-x-4">
-                                                    <div>
-                                                        <p class="text-sm text-gray-500">
-                                                            <a href="{{ route('cases.show', $case) }}"
-                                                                class="font-medium text-red-600 hover:text-red-500">
-                                                                {{ $case->short_id }}
-                                                            </a>
-                                                        </p>
-                                                        <p class="text-sm text-gray-900 font-medium">{{ $case->category }}
-                                                        </p>
-                                                        <p class="text-xs text-gray-500">
-                                                            {{ Str::limit($case->location, 30) }}</p>
-                                                        <div class="mt-1">
-                                                            <x-status-badge :status="$case->status" />
-                                                        </div>
-                                                    </div>
-                                                    <div class="text-right text-sm whitespace-nowrap text-gray-500">
-                                                        {{ $case->created_at->diffForHumans() }}
-                                                    </div>
-                                                </div>
+                        <a href="{{ route('cases.index') }}" class="text-red-600 hover:text-red-500 text-sm font-medium">
+                            Lihat Semua →
+                        </a>
+                    </div>
+
+                    @if($recentCases->count() > 0)
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                            @foreach ($recentCases as $case)
+                                <div class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                                    <div class="flex items-start justify-between mb-3">
+                                        <div>
+                                            <a href="{{ route('cases.show', $case) }}" class="text-sm font-medium text-red-600 hover:text-red-500">
+                                                {{ $case->short_id }}
+                                            </a>
+                                            <p class="text-xs text-gray-500">{{ $case->created_at->format('d/m H:i') }}</p>
+                                        </div>
+                                        <x-status-badge :status="$case->status" />
+                                    </div>
+
+                                    <div class="space-y-2">
+                                        <div>
+                                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium
+                                                {{ $case->category === 'MEDIS' ? 'bg-blue-100 text-blue-800' : '' }}
+                                                {{ $case->category === 'KEBAKARAN' ? 'bg-red-100 text-red-800' : '' }}
+                                                {{ $case->category === 'KRIMINAL' ? 'bg-purple-100 text-purple-800' : '' }}
+                                                {{ $case->category === 'UMUM' ? 'bg-gray-100 text-gray-800' : '' }}
+                                                {{ in_array($case->category, ['BENCANA_ALAM', 'BANJIR', 'POHON_TUMBANG']) ? 'bg-yellow-100 text-yellow-800' : '' }}
+                                                {{ in_array($case->category, ['KECELAKAAN', 'KEBOCORAN_GAS']) ? 'bg-orange-100 text-orange-800' : '' }}">
+                                                @switch($case->category)
+                                                    @case('MEDIS') Medis @break
+                                                    @case('KEBAKARAN') Kebakaran @break
+                                                    @case('KRIMINAL') Kriminal @break
+                                                    @case('UMUM') Umum @break
+                                                    @case('BENCANA_ALAM') Bencana Alam @break
+                                                    @case('KECELAKAAN') Kecelakaan @break
+                                                    @case('KEBOCORAN_GAS') Kebocoran Gas @break
+                                                    @case('POHON_TUMBANG') Pohon Tumbang @break
+                                                    @case('BANJIR') Banjir @break
+                                                    @default {{ $case->category }}
+                                                @endswitch
+                                            </span>
+                                        </div>
+
+                                        <p class="text-sm text-gray-900 font-medium line-clamp-2">
+                                            {{ Str::limit($case->location ?: $case->locator_text, 50) }}
+                                        </p>
+
+                                        @if($case->assignedUnit)
+                                            <div class="flex items-center text-xs text-gray-500">
+                                                <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                                                </svg>
+                                                {{ $case->assignedUnit->name }}
+                                            </div>
+                                        @endif
+
+                                        <div class="flex items-center justify-between pt-2">
+                                            <span class="text-xs text-gray-500">
+                                                {{ $case->created_at->diffForHumans() }}
+                                            </span>
+                                            <div class="flex space-x-2">
+                                                <a href="{{ route('cases.show', $case) }}" 
+                                                   class="text-xs text-red-600 hover:text-red-700 font-medium">
+                                                    Detail
+                                                </a>
+                                                @if($case->lat && $case->lon)
+                                                    <a href="https://www.google.com/maps?q={{ $case->lat }},{{ $case->lon }}" 
+                                                       target="_blank" 
+                                                       class="text-xs text-blue-600 hover:text-blue-700 font-medium">
+                                                        Maps
+                                                    </a>
+                                                @endif
                                             </div>
                                         </div>
-                                    </li>
-                                @endforeach
-                            </ul>
+                                    </div>
+                                </div>
+                            @endforeach
                         </div>
-                        <div class="mt-6">
-                            <a href="{{ route('cases.index') }}"
-                                class="w-full flex justify-center items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
-                                Lihat Semua Kasus
-                            </a>
+                    @else
+                        <div class="text-center py-8">
+                            <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                            </svg>
+                            <h3 class="mt-2 text-sm font-medium text-gray-900">Tidak ada kasus</h3>
+                            <p class="mt-1 text-sm text-gray-500">Belum ada laporan kasus darurat.</p>
                         </div>
-                    </div>
+                    @endif
                 </div>
             </div>
         </div>
