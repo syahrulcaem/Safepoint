@@ -15,7 +15,7 @@ return new class extends Migration
             // Rename columns to match new structure
             $table->renameColumn('event', 'action');
             $table->renameColumn('meta', 'metadata');
-            
+
             // Add notes column
             $table->text('notes')->nullable()->after('action');
         });

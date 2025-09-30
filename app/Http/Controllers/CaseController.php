@@ -49,9 +49,9 @@ class CaseController extends Controller
             $search = $request->q;
             $query->where(function ($q) use ($search) {
                 $q->where('short_id', 'LIKE', "%{$search}%")
-                  ->orWhere('locator_text', 'LIKE', "%{$search}%")
-                  ->orWhere('location', 'LIKE', "%{$search}%")
-                  ->orWhere('phone', 'LIKE', "%{$search}%");
+                    ->orWhere('locator_text', 'LIKE', "%{$search}%")
+                    ->orWhere('location', 'LIKE', "%{$search}%")
+                    ->orWhere('phone', 'LIKE', "%{$search}%");
             });
         }
 
