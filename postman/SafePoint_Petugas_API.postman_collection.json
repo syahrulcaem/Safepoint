@@ -1,0 +1,390 @@
+{
+    "info": {
+        "name": "SafePoint Petugas Mobile API",
+        "description": "API endpoints for SafePoint field officers (petugas) mobile application",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+        "_exporter_id": "12345678"
+    },
+    "item": [
+        {
+            "name": "Authentication",
+            "item": [
+                {
+                    "name": "Login Petugas",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"email\": \"petugas.test@safepoint.id\",\n    \"password\": \"test123\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/api/login",
+                            "host": ["{{base_url}}"],
+                            "path": ["api", "login"]
+                        },
+                        "description": "Login endpoint for petugas authentication"
+                    }
+                },
+                {
+                    "name": "Get Current User",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{access_token}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/me",
+                            "host": ["{{base_url}}"],
+                            "path": ["api", "me"]
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Profile Management",
+            "item": [
+                {
+                    "name": "Get Petugas Profile",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{access_token}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/petugas/profile",
+                            "host": ["{{base_url}}"],
+                            "path": ["api", "petugas", "profile"]
+                        }
+                    }
+                },
+                {
+                    "name": "Update Petugas Profile",
+                    "request": {
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{access_token}}"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"name\": \"Petugas Field Test Updated\",\n    \"phone\": \"081234567803\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/api/petugas/profile",
+                            "host": ["{{base_url}}"],
+                            "path": ["api", "petugas", "profile"]
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Duty Management",
+            "item": [
+                {
+                    "name": "Get Duty Status",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{access_token}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/petugas/duty/status",
+                            "host": ["{{base_url}}"],
+                            "path": ["api", "petugas", "duty", "status"]
+                        }
+                    }
+                },
+                {
+                    "name": "Start Duty",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{access_token}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/petugas/duty/start",
+                            "host": ["{{base_url}}"],
+                            "path": ["api", "petugas", "duty", "start"]
+                        }
+                    }
+                },
+                {
+                    "name": "End Duty",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{access_token}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/petugas/duty/end",
+                            "host": ["{{base_url}}"],
+                            "path": ["api", "petugas", "duty", "end"]
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Location Tracking",
+            "item": [
+                {
+                    "name": "Update Location",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{access_token}}"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"latitude\": -6.2088,\n    \"longitude\": 106.8456\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/api/petugas/location/update",
+                            "host": ["{{base_url}}"],
+                            "path": ["api", "petugas", "location", "update"]
+                        }
+                    }
+                },
+                {
+                    "name": "Get Current Location",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{access_token}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/petugas/location/current",
+                            "host": ["{{base_url}}"],
+                            "path": ["api", "petugas", "location", "current"]
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Case Management",
+            "item": [
+                {
+                    "name": "Get Assigned Cases",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{access_token}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/petugas/cases/assigned?per_page=10",
+                            "host": ["{{base_url}}"],
+                            "path": ["api", "petugas", "cases", "assigned"],
+                            "query": [
+                                {
+                                    "key": "per_page",
+                                    "value": "10"
+                                },
+                                {
+                                    "key": "status",
+                                    "value": "ASSIGNED",
+                                    "disabled": true
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Get Case Detail",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{access_token}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/petugas/cases/{{case_id}}",
+                            "host": ["{{base_url}}"],
+                            "path": ["api", "petugas", "cases", "{{case_id}}"]
+                        }
+                    }
+                },
+                {
+                    "name": "Update Case Status",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{access_token}}"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"status\": \"ON_ROUTE\",\n    \"notes\": \"Petugas dalam perjalanan menuju lokasi\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/api/petugas/cases/{{case_id}}/status",
+                            "host": ["{{base_url}}"],
+                            "path": ["api", "petugas", "cases", "{{case_id}}", "status"]
+                        }
+                    }
+                },
+                {
+                    "name": "Add Case Note",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{access_token}}"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"note\": \"Situasi terkendali, korban dalam kondisi stabil\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/api/petugas/cases/{{case_id}}/note",
+                            "host": ["{{base_url}}"],
+                            "path": ["api", "petugas", "cases", "{{case_id}}", "note"]
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Communication",
+            "item": [
+                {
+                    "name": "Get Family Contacts",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{access_token}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/petugas/cases/{{case_id}}/family-contacts",
+                            "host": ["{{base_url}}"],
+                            "path": ["api", "petugas", "cases", "{{case_id}}", "family-contacts"]
+                        }
+                    }
+                },
+                {
+                    "name": "Contact Family WhatsApp",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{access_token}}"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"contact_type\": \"family_whatsapp\",\n    \"message_template\": \"arrival_notification\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/api/petugas/cases/{{case_id}}/contact-family",
+                            "host": ["{{base_url}}"],
+                            "path": ["api", "petugas", "cases", "{{case_id}}", "contact-family"]
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Dashboard",
+            "item": [
+                {
+                    "name": "Get Dashboard Data",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{access_token}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/petugas/dashboard",
+                            "host": ["{{base_url}}"],
+                            "path": ["api", "petugas", "dashboard"]
+                        }
+                    }
+                }
+            ]
+        }
+    ],
+    "variable": [
+        {
+            "key": "base_url",
+            "value": "http://127.0.0.1:8000",
+            "type": "string"
+        },
+        {
+            "key": "access_token",
+            "value": "",
+            "type": "string"
+        },
+        {
+            "key": "case_id",
+            "value": "01H4XXXXXXXXXXXXXXXXXXXXXG",
+            "type": "string"
+        }
+    ]
+}

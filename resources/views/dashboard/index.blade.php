@@ -163,7 +163,16 @@
                     <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">
                         Peta Kasus Aktif
                     </h3>
-                    <div id="map" style="height: 500px;" class="rounded-lg"></div>
+                    <div id="map" style="height: 500px;" class="rounded-lg relative">
+                        <!-- Grid Info Panel -->
+                        <div id="grid-info"
+                            class="absolute bottom-3 left-3 bg-white px-3 py-2 rounded shadow-lg border text-xs text-gray-600 z-10"
+                            style="display: none;">
+                            <div class="font-medium text-red-600 mb-1">Grid 3x3 Meter</div>
+                            <div>Setiap kotak = ~3m x 3m</div>
+                            <div>Zoom in untuk detail lebih presisi</div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -366,6 +375,237 @@
 
         // Active cases data
         const activeCases = @json($activeCases);
+
+        // Grid toggle functionality
+        let gridVisible = false;
+        let gridLayer = null;
+
+        // Add grid toggle button
+        const gridToggle = document.createElement('button');
+        gridToggle.innerHTML = `
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+            </svg>
+            <span class="ml-1 text-xs">Grid 3x3m</span>
+        `;
+        gridToggle.className =
+            'bg-white px-3 py-2 text-gray-700 border border-gray-300 rounded shadow-sm hover:bg-gray-50 flex items-center text-sm font-medium transition-colors';
+        gridToggle.style.position = 'absolute';
+        gridToggle.style.top = '10px';
+        gridToggle.style.right = '10px';
+        gridToggle.style.zIndex = '1000';
+
+        // Add button to map container
+        document.getElementById('map').appendChild(gridToggle);
+
+        // Function to create 3x3 meter grid
+        function create3mGrid(bounds) {
+            const features = [];
+            const zoom = map.getZoom();
+
+            // Adjust grid density based on zoom level
+            let gridSpacing;
+            if (zoom >= 18) {
+                gridSpacing = 0.000027; // ~3m - very detailed
+            } else if (zoom >= 16) {
+                gridSpacing = 0.000054; // ~6m - medium detail
+            } else if (zoom >= 14) {
+                gridSpacing = 0.000108; // ~12m - less detail
+            } else {
+                gridSpacing = 0.000216; // ~24m - minimal detail
+            }
+
+            const west = bounds.getWest();
+            const east = bounds.getEast();
+            const north = bounds.getNorth();
+            const south = bounds.getSouth();
+
+            // Limit grid generation to prevent performance issues
+            const maxLines = 200;
+            const verticalLines = Math.min(Math.ceil((east - west) / gridSpacing), maxLines);
+            const horizontalLines = Math.min(Math.ceil((north - south) / gridSpacing), maxLines);
+
+            // Create vertical lines
+            for (let i = 0; i <= verticalLines; i++) {
+                const lng = west + (i * gridSpacing);
+                if (lng <= east) {
+                    features.push({
+                        type: 'Feature',
+                        geometry: {
+                            type: 'LineString',
+                            coordinates: [
+                                [lng, south],
+                                [lng, north]
+                            ]
+                        },
+                        properties: {
+                            type: 'grid-line'
+                        }
+                    });
+                }
+            }
+
+            // Create horizontal lines  
+            for (let i = 0; i <= horizontalLines; i++) {
+                const lat = south + (i * gridSpacing);
+                if (lat <= north) {
+                    features.push({
+                        type: 'Feature',
+                        geometry: {
+                            type: 'LineString',
+                            coordinates: [
+                                [west, lat],
+                                [east, lat]
+                            ]
+                        },
+                        properties: {
+                            type: 'grid-line'
+                        }
+                    });
+                }
+            }
+
+            return {
+                type: 'FeatureCollection',
+                features: features
+            };
+        }
+
+        // Function to update grid info
+        function updateGridInfo() {
+            const zoom = map.getZoom();
+            const infoPanel = document.getElementById('grid-info');
+
+            let gridSize;
+            if (zoom >= 18) {
+                gridSize = '~3m x 3m';
+            } else if (zoom >= 16) {
+                gridSize = '~6m x 6m';
+            } else if (zoom >= 14) {
+                gridSize = '~12m x 12m';
+            } else {
+                gridSize = '~24m x 24m';
+            }
+
+            infoPanel.innerHTML = `
+                <div class="font-medium text-red-600 mb-1">Grid Presisi Lokasi</div>
+                <div>Setiap kotak = ${gridSize}</div>
+                <div>Zoom: ${Math.round(zoom * 10) / 10}</div>
+                <div class="text-xs text-gray-500 mt-1">Zoom in untuk grid lebih presisi</div>
+            `;
+        }
+
+        // Function to toggle grid
+        function toggleGrid() {
+            const infoPanel = document.getElementById('grid-info');
+
+            if (gridVisible) {
+                // Hide grid
+                if (map.getLayer('grid-layer')) {
+                    map.removeLayer('grid-layer');
+                }
+                if (map.getSource('grid-source')) {
+                    map.removeSource('grid-source');
+                }
+                gridToggle.style.backgroundColor = '#ffffff';
+                gridToggle.style.color = '#374151';
+                gridToggle.innerHTML = `
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                    </svg>
+                    <span class="ml-1 text-xs">Tampilkan Grid</span>
+                `;
+                infoPanel.style.display = 'none';
+                gridVisible = false;
+            } else {
+                // Show grid
+                const bounds = map.getBounds();
+                const gridData = create3mGrid(bounds);
+
+                map.addSource('grid-source', {
+                    type: 'geojson',
+                    data: gridData
+                });
+
+                map.addLayer({
+                    id: 'grid-layer',
+                    type: 'line',
+                    source: 'grid-source',
+                    paint: {
+                        'line-color': '#ef4444',
+                        'line-width': [
+                            'interpolate',
+                            ['linear'],
+                            ['zoom'],
+                            12, 0.3,
+                            18, 1
+                        ],
+                        'line-opacity': 0.7
+                    }
+                });
+
+                gridToggle.style.backgroundColor = '#ef4444';
+                gridToggle.style.color = '#ffffff';
+                gridToggle.innerHTML = `
+                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M4 6h16M4 12h16M4 18h16"></path>
+                    </svg>
+                    <span class="ml-1 text-xs">Sembunyikan Grid</span>
+                `;
+                infoPanel.style.display = 'block';
+                updateGridInfo();
+                gridVisible = true;
+            }
+        }
+
+        // Add click event to grid toggle
+        gridToggle.addEventListener('click', toggleGrid);
+
+        // Update grid when map moves or zooms (only if grid is visible)
+        map.on('moveend', function() {
+            if (gridVisible) {
+                const bounds = map.getBounds();
+                const gridData = create3mGrid(bounds);
+
+                if (map.getSource('grid-source')) {
+                    map.getSource('grid-source').setData(gridData);
+                }
+                updateGridInfo();
+            }
+        });
+
+        map.on('zoomend', function() {
+            if (gridVisible) {
+                updateGridInfo();
+            }
+        });
+
+        // Add hover coordinate display
+        const coordinateDisplay = document.createElement('div');
+        coordinateDisplay.id = 'coordinate-display';
+        coordinateDisplay.className =
+            'absolute top-3 left-3 bg-white px-3 py-2 rounded shadow-lg border text-xs text-gray-600 z-10';
+        coordinateDisplay.style.display = 'none';
+        document.getElementById('map').appendChild(coordinateDisplay);
+
+        // Show coordinates on hover when grid is visible
+        map.on('mousemove', function(e) {
+            if (gridVisible) {
+                const lat = e.lngLat.lat.toFixed(6);
+                const lng = e.lngLat.lng.toFixed(6);
+
+                coordinateDisplay.innerHTML = `
+                    <div class="font-medium text-red-600">Koordinat Presisi</div>
+                    <div>Lat: ${lat}</div>
+                    <div>Lng: ${lng}</div>
+                `;
+                coordinateDisplay.style.display = 'block';
+            }
+        });
+
+        map.on('mouseleave', function() {
+            coordinateDisplay.style.display = 'none';
+        });
 
         // Add markers for active cases
         map.on('load', function() {

@@ -28,6 +28,12 @@ class User extends Authenticatable
         'password',
         'role',
         'unit_id',
+        'last_latitude',
+        'last_longitude',
+        'last_location_update',
+        'duty_status',
+        'duty_started_at',
+        'last_activity_at',
     ];
 
     /**
@@ -50,6 +56,11 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'last_location_update' => 'datetime',
+            'duty_started_at' => 'datetime',
+            'last_activity_at' => 'datetime',
+            'last_latitude' => 'decimal:8',
+            'last_longitude' => 'decimal:8',
         ];
     }
 
@@ -93,5 +104,55 @@ class User extends Authenticatable
     public function canViewAssignedCases(): bool
     {
         return $this->role === 'PETUGAS';
+    }
+
+    public function isOnDuty(): bool
+    {
+        return $this->duty_status === 'ON_DUTY';
+    }
+
+    public function isOffDuty(): bool
+    {
+        return $this->duty_status === 'OFF_DUTY';
+    }
+
+    public function startDuty(): void
+    {
+        $this->update([
+            'duty_status' => 'ON_DUTY',
+            'duty_started_at' => now(),
+            'last_activity_at' => now(),
+        ]);
+    }
+
+    public function endDuty(): void
+    {
+        $this->update([
+            'duty_status' => 'OFF_DUTY',
+            'duty_started_at' => null,
+            'last_activity_at' => now(),
+        ]);
+    }
+
+    public function updateLocation(float $latitude, float $longitude): void
+    {
+        $this->update([
+            'last_latitude' => $latitude,
+            'last_longitude' => $longitude,
+            'last_location_update' => now(),
+            'last_activity_at' => now(),
+        ]);
+    }
+
+    public function getLastLocationAttribute(): ?array
+    {
+        if ($this->last_latitude && $this->last_longitude) {
+            return [
+                'latitude' => (float) $this->last_latitude,
+                'longitude' => (float) $this->last_longitude,
+                'updated_at' => $this->last_location_update,
+            ];
+        }
+        return null;
     }
 }
