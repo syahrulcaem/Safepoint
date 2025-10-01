@@ -82,11 +82,16 @@ class User extends Authenticatable
     // Helper methods
     public function hasWebRole(): bool
     {
-        return in_array($this->role, ['OPERATOR', 'SUPERADMIN', 'PIMPINAN']);
+        return in_array($this->role, ['OPERATOR', 'SUPERADMIN', 'PIMPINAN', 'PETUGAS']);
     }
 
     public function canManageCases(): bool
     {
         return in_array($this->role, ['OPERATOR', 'SUPERADMIN']);
+    }
+
+    public function canViewAssignedCases(): bool
+    {
+        return $this->role === 'PETUGAS';
     }
 }

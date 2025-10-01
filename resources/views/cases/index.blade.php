@@ -354,7 +354,7 @@
                                                     {{ $case->short_id }}
                                                 </a>
                                             </div>
-                                            <div class="text-xs text-gray-500 truncate max-w-[120px]"
+                                            <div class="text-xs text-gray-500 truncate max-w-[120px] font-mono"
                                                 title="{{ $case->locator_text }}">
                                                 {{ $case->locator_text }}
                                             </div>
@@ -430,9 +430,9 @@
                                             @endif
                                         </td>
                                         <td class="px-3 py-3 text-sm text-gray-900">
-                                            <div class="truncate max-w-[200px]"
-                                                title="{{ $case->location ?: $case->locator_text }}">
-                                                {{ Str::limit($case->location ?: $case->locator_text, 40) }}
+                                            <div class="truncate max-w-[200px] font-mono text-blue-600"
+                                                title="{{ $case->locator_text }}">
+                                                {{ Str::limit($case->locator_text, 40) }}
                                             </div>
                                         </td>
                                         <td class="px-3 py-3 whitespace-nowrap text-sm text-gray-900">

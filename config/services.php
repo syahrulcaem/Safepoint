@@ -35,4 +35,8 @@ return [
         ],
     ],
 
+    'what3words' => [
+        'api_key' => env('WHAT3WORDS_API_KEY'),
+    ],
+
 ];

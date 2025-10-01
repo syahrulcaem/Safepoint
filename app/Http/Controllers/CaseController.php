@@ -5,15 +5,27 @@ namespace App\Http\Controllers;
 use App\Models\Cases;
 use App\Models\Unit;
 use App\Models\CaseEvent;
+use App\Services\What3WordsService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
 
 class CaseController extends Controller
 {
+    protected What3WordsService $what3wordsService;
+
+    public function __construct(What3WordsService $what3wordsService)
+    {
+        $this->what3wordsService = $what3wordsService;
+    }
     public function index(Request $request)
     {
         $query = Cases::with(['reporterUser', 'assignedUnit']);
+
+        // Filter cases for PETUGAS role - only show cases assigned to their unit
+        if (Auth::user()->canViewAssignedCases()) {
+            $query->where('assigned_unit_id', Auth::user()->unit_id);
+        }
 
         // Filter by status
         if ($request->filled('status')) {
@@ -90,7 +102,13 @@ class CaseController extends Controller
 
         $units = Unit::active()->orderBy('name')->get();
 
-        return view('cases.show', compact('case', 'units'));
+        // Generate Google Maps URL for the case location
+        $googleMapsUrl = $this->what3wordsService->getGoogleMapsUrl(
+            (float) $case->lat,
+            (float) $case->lon
+        );
+
+        return view('cases.show', compact('case', 'units', 'googleMapsUrl'));
     }
 
     public function modal(Cases $case)
@@ -155,10 +173,10 @@ class CaseController extends Controller
             'actor_id' => Auth::id(),
             'action' => 'VERIFIED',
             'notes' => 'Kasus telah diverifikasi oleh operator',
-            'metadata' => json_encode([
+            'metadata' => [
                 'previous_status' => 'NEW',
                 'new_status' => 'VERIFIED'
-            ])
+            ]
         ]);
 
         return back()->with('success', 'Kasus berhasil diverifikasi.');
@@ -189,13 +207,13 @@ class CaseController extends Controller
             'actor_id' => Auth::id(),
             'action' => 'DISPATCHED',
             'notes' => $request->notes ?: "Dikirim ke unit {$unit->name}",
-            'metadata' => json_encode([
+            'metadata' => [
                 'unit_id' => $unit->id,
                 'unit_name' => $unit->name,
                 'unit_type' => $unit->type,
                 'previous_status' => $case->getOriginal('status'),
                 'new_status' => 'DISPATCHED'
-            ])
+            ]
         ]);
 
         return back()->with('success', "Kasus berhasil dikirim ke unit {$unit->name}.");
@@ -222,11 +240,11 @@ class CaseController extends Controller
             'actor_id' => Auth::id(),
             'action' => 'CLOSED',
             'notes' => $request->notes,
-            'metadata' => json_encode([
+            'metadata' => [
                 'previous_status' => $case->getOriginal('status'),
                 'new_status' => 'CLOSED',
                 'closure_reason' => $request->notes
-            ])
+            ]
         ]);
 
         return back()->with('success', 'Kasus berhasil ditutup.');
@@ -252,11 +270,11 @@ class CaseController extends Controller
             'actor_id' => Auth::id(),
             'action' => 'CANCELLED',
             'notes' => $request->notes,
-            'metadata' => json_encode([
+            'metadata' => [
                 'previous_status' => $case->getOriginal('status'),
                 'new_status' => 'CANCELLED',
                 'cancellation_reason' => $request->notes
-            ])
+            ]
         ]);
 
         return back()->with('success', 'Kasus berhasil dibatalkan.');

@@ -117,19 +117,30 @@
                             </div>
 
                             <div>
-                                <dt class="text-sm font-medium text-gray-500">Lokasi</dt>
-                                <dd class="mt-1 text-sm text-gray-900">{{ $case->location ?: $case->locator_text }}</dd>
-                            </div>
-
-                            <div>
-                                <dt class="text-sm font-medium text-gray-500">Koordinat (Lat, Lon)</dt>
-                                <dd class="mt-1 text-sm font-mono text-gray-900">{{ $case->lat }}, {{ $case->lon }}
+                                <dt class="text-sm font-medium text-gray-500">Lokasi (What3Words)</dt>
+                                <dd class="mt-1 text-sm text-gray-900">
+                                    <div class="flex items-center space-x-2">
+                                        <span class="font-mono text-blue-600">{{ $case->locator_text }}</span>
+                                        <a href="{{ $googleMapsUrl }}" target="_blank"
+                                            class="inline-flex items-center px-2 py-1 border border-blue-300 shadow-sm text-xs font-medium rounded text-blue-700 bg-blue-50 hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                                            <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor"
+                                                viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z">
+                                                </path>
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                            </svg>
+                                            Buka di Maps
+                                        </a>
+                                    </div>
                                 </dd>
                             </div>
 
                             <div>
-                                <dt class="text-sm font-medium text-gray-500">Locator Text</dt>
-                                <dd class="mt-1 text-sm text-gray-900">{{ $case->locator_text }}</dd>
+                                <dt class="text-sm font-medium text-gray-500">Koordinat (Lat, Lon)</dt>
+                                <dd class="mt-1 text-sm font-mono text-gray-600">{{ $case->lat }}, {{ $case->lon }}
+                                </dd>
                             </div>
 
                             <div>
@@ -297,7 +308,7 @@
                                                                     <details>
                                                                         <summary class="cursor-pointer">Detail metadata
                                                                         </summary>
-                                                                        <pre class="mt-1 bg-gray-50 p-2 rounded text-xs">{{ json_encode(json_decode($event->metadata), JSON_PRETTY_PRINT) }}</pre>
+                                                                        <pre class="mt-1 bg-gray-50 p-2 rounded text-xs">{{ json_encode($event->metadata, JSON_PRETTY_PRINT) }}</pre>
                                                                     </details>
                                                                 </div>
                                                             @endif
