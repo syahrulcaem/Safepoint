@@ -22,7 +22,7 @@ class UserController extends Controller
 
     public function index()
     {
-        $users = User::orderBy('created_at', 'desc')->paginate(15);
+        $users = User::with('citizenProfile')->orderBy('created_at', 'desc')->paginate(15);
 
         // Count users by role
         $roleStats = [
@@ -175,5 +175,38 @@ class UserController extends Controller
 
         return redirect()->route('users.index')
             ->with('success', "User berhasil {$status}.");
+    }
+
+    public function whatsapp(User $user)
+    {
+        // Load citizen profile untuk mendapatkan info keluarga
+        $user->load('citizenProfile');
+
+        return view('users.whatsapp', compact('user'));
+    }
+
+    public function sendWhatsapp(Request $request, User $user)
+    {
+        $request->validate([
+            'message' => 'required|string|max:1000',
+        ]);
+
+        // Format nomor telepon (hapus karakter non-digit)
+        $phone = preg_replace('/[^0-9]/', '', $user->phone);
+
+        // Jika nomor dimulai dengan 0, ganti dengan 62
+        if (substr($phone, 0, 1) === '0') {
+            $phone = '62' . substr($phone, 1);
+        }
+
+        // Generate WhatsApp link
+        $message = urlencode($request->message);
+        $whatsappUrl = "https://wa.me/{$phone}?text={$message}";
+
+        return response()->json([
+            'success' => true,
+            'whatsapp_url' => $whatsappUrl,
+            'message' => 'Link WhatsApp berhasil dibuat. Anda akan diarahkan ke WhatsApp.'
+        ]);
     }
 }

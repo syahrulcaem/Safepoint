@@ -13,7 +13,7 @@ class CitizenProfile extends Model
     protected $fillable = [
         'user_id',
         'nik',
-        'nomor_keluarga',
+        'whatsapp_keluarga',
         'hubungan',
         'ktp_image_url',
         'birth_date',

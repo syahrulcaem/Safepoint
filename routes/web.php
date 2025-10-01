@@ -21,6 +21,8 @@ Route::middleware(['auth', 'web.role'])->group(function () {
     Route::get('/cases', [CaseController::class, 'index'])->name('cases.index');
     Route::get('/cases/{case}', [CaseController::class, 'show'])->name('cases.show');
     Route::get('/cases/{case}/modal', [CaseController::class, 'modal'])->name('cases.modal');
+    Route::get('/cases/{case}/whatsapp', [CaseController::class, 'whatsapp'])->name('cases.whatsapp');
+    Route::post('/cases/{case}/send-whatsapp', [CaseController::class, 'sendWhatsapp'])->name('cases.send-whatsapp');
 
     // Case Actions
     Route::post('/cases/{case}/verify', [CaseController::class, 'verify'])->name('cases.verify');
@@ -31,4 +33,6 @@ Route::middleware(['auth', 'web.role'])->group(function () {
     // User Management - Super Admin Only
     Route::resource('users', UserController::class);
     Route::post('/users/{user}/toggle-status', [UserController::class, 'toggleStatus'])->name('users.toggle-status');
+    Route::get('/users/{user}/whatsapp', [UserController::class, 'whatsapp'])->name('users.whatsapp');
+    Route::post('/users/{user}/send-whatsapp', [UserController::class, 'sendWhatsapp'])->name('users.send-whatsapp');
 });

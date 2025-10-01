@@ -228,6 +228,12 @@
                                                 class="text-yellow-600 hover:text-yellow-500">
                                                 Edit
                                             </a>
+                                            @if ($user->phone && $user->role === 'WARGA')
+                                                <a href="{{ route('users.whatsapp', $user) }}"
+                                                    class="text-green-600 hover:text-green-500" title="Kirim WhatsApp">
+                                                    WhatsApp
+                                                </a>
+                                            @endif
                                             @if ($user->id !== auth()->id())
                                                 <form action="{{ route('users.toggle-status', $user) }}" method="POST"
                                                     class="inline">

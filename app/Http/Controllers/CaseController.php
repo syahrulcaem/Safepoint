@@ -78,7 +78,7 @@ class CaseController extends Controller
     public function show(Cases $case)
     {
         $case->load([
-            'reporterUser',
+            'reporterUser.citizenProfile',
             'assignedUnit',
             'caseEvents' => function ($query) {
                 $query->with('actor')->orderBy('created_at', 'desc');
@@ -260,5 +260,55 @@ class CaseController extends Controller
         ]);
 
         return back()->with('success', 'Kasus berhasil dibatalkan.');
+    }
+
+    public function whatsapp(Cases $case)
+    {
+        // Load citizen profile untuk mendapatkan info keluarga
+        $case->load('reporterUser.citizenProfile');
+
+        // Pastikan case memiliki reporter dengan nomor WhatsApp keluarga
+        if (!$case->reporterUser || !$case->reporterUser->citizenProfile || !$case->reporterUser->citizenProfile->whatsapp_keluarga) {
+            return redirect()->route('cases.show', $case)
+                ->with('error', 'Tidak dapat menghubungi keluarga: nomor WhatsApp keluarga tidak tersedia.');
+        }
+
+        return view('cases.whatsapp', compact('case'));
+    }
+
+    public function sendWhatsapp(Request $request, Cases $case)
+    {
+        $request->validate([
+            'message' => 'required|string|max:1000',
+        ]);
+
+        // Load citizen profile
+        $case->load('reporterUser.citizenProfile');
+
+        // Pastikan nomor WhatsApp keluarga tersedia
+        if (!$case->reporterUser || !$case->reporterUser->citizenProfile || !$case->reporterUser->citizenProfile->whatsapp_keluarga) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Nomor WhatsApp keluarga tidak tersedia.'
+            ], 400);
+        }
+
+        // Format nomor telepon keluarga (hapus karakter non-digit)
+        $phone = preg_replace('/[^0-9]/', '', $case->reporterUser->citizenProfile->whatsapp_keluarga);
+
+        // Jika nomor dimulai dengan 0, ganti dengan 62
+        if (substr($phone, 0, 1) === '0') {
+            $phone = '62' . substr($phone, 1);
+        }
+
+        // Generate WhatsApp link
+        $message = urlencode($request->message);
+        $whatsappUrl = "https://wa.me/{$phone}?text={$message}";
+
+        return response()->json([
+            'success' => true,
+            'whatsapp_url' => $whatsappUrl,
+            'message' => 'Link WhatsApp berhasil dibuat. Anda akan diarahkan ke WhatsApp keluarga.'
+        ]);
     }
 }

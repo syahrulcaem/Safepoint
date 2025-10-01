@@ -19,7 +19,7 @@ class AuthController extends Controller
             'phone' => 'nullable|string|max:32|unique:users,phone',
             'password' => 'required|string|min:6',
             'nik' => 'nullable|string|max:32|unique:citizen_profiles,nik',
-            'nomor_keluarga' => 'nullable|string|max:50',
+            'whatsapp_keluarga' => 'nullable|string|max:20',
             'hubungan' => 'nullable|in:KEPALA_KELUARGA,ISTRI,SUAMI,ANAK,AYAH,IBU,KAKEK,NENEK,CUCU,SAUDARA,LAINNYA',
         ]);
 
@@ -43,7 +43,7 @@ class AuthController extends Controller
         if ($request->nik) {
             $user->citizenProfile()->create([
                 'nik' => $request->nik,
-                'nomor_keluarga' => $request->nomor_keluarga,
+                'whatsapp_keluarga' => $request->whatsapp_keluarga,
                 'hubungan' => $request->hubungan,
             ]);
         }
