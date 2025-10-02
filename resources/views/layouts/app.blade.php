@@ -12,6 +12,10 @@
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
 
+    <!-- Mapbox GL JS -->
+    <link href='https://api.mapbox.com/mapbox-gl-js/v3.0.1/mapbox-gl.css' rel='stylesheet' />
+    <script src='https://api.mapbox.com/mapbox-gl-js/v3.0.1/mapbox-gl.js'></script>
+
     <!-- Scripts -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
@@ -37,6 +41,10 @@
                             Kasus
                         </a>
                         @if (auth()->check() && auth()->user()->role === 'SUPERADMIN')
+                            <a href="{{ route('units.index') }}"
+                                class="text-gray-500 hover:text-red-600 px-3 py-2 rounded-md text-sm font-medium {{ request()->routeIs('units.*') ? 'text-red-600 bg-red-50' : '' }}">
+                                Units
+                            </a>
                             <a href="{{ route('users.index') }}"
                                 class="text-gray-500 hover:text-red-600 px-3 py-2 rounded-md text-sm font-medium {{ request()->routeIs('users.*') ? 'text-red-600 bg-red-50' : '' }}">
                                 Users

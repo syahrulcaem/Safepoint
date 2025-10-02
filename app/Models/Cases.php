@@ -27,6 +27,7 @@ class Cases extends Model
         'category',
         'status',
         'assigned_unit_id',
+        'assigned_petugas_id',
         'contacts_snapshot',
         'verified_at',
         'dispatched_at',
@@ -70,6 +71,11 @@ class Cases extends Model
     public function assignedUnit(): BelongsTo
     {
         return $this->belongsTo(Unit::class, 'assigned_unit_id');
+    }
+
+    public function assignedPetugas(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'assigned_petugas_id');
     }
 
     public function caseEvents(): HasMany

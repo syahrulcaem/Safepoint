@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Models\Unit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
@@ -22,7 +23,7 @@ class UserController extends Controller
 
     public function index()
     {
-        $users = User::with('citizenProfile')->orderBy('created_at', 'desc')->paginate(15);
+        $users = User::with(['citizenProfile', 'unit'])->orderBy('created_at', 'desc')->paginate(15);
 
         // Count users by role
         $roleStats = [
@@ -31,6 +32,8 @@ class UserController extends Controller
             'admin' => User::where('role', 'ADMIN')->count(),
             'operator' => User::where('role', 'OPERATOR')->count(),
             'pimpinan' => User::where('role', 'PIMPINAN')->count(),
+            'petugas' => User::where('role', 'PETUGAS')->count(),
+            'warga' => User::where('role', 'WARGA')->count(),
         ];
 
         return view('users.index', compact('users', 'roleStats'));
@@ -39,25 +42,35 @@ class UserController extends Controller
     public function create()
     {
         $roles = [
-            'SUPER_ADMIN' => 'Super Admin',
+            'SUPERADMIN' => 'Super Admin',
             'ADMIN' => 'Admin',
             'OPERATOR' => 'Operator',
-            'USER' => 'User'
+            'PIMPINAN' => 'Pimpinan',
+            'PETUGAS' => 'Petugas',
+            'WARGA' => 'Warga'
         ];
 
-        return view('users.create', compact('roles'));
+        $units = Unit::active()->orderBy('name')->get();
+
+        return view('users.create', compact('roles', 'units'));
     }
 
     public function store(Request $request)
     {
-        $request->validate([
+        $validationRules = [
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users',
             'phone' => 'nullable|string|max:20|unique:users',
             'password' => 'required|string|min:8|confirmed',
-            'role' => 'required|in:SUPER_ADMIN,ADMIN,OPERATOR,USER',
-            'is_active' => 'boolean'
-        ], [
+            'role' => 'required|in:SUPERADMIN,ADMIN,OPERATOR,PIMPINAN,PETUGAS,WARGA',
+        ];
+
+        // Unit is required for PETUGAS role
+        if ($request->role === 'PETUGAS') {
+            $validationRules['unit_id'] = 'required|exists:units,id';
+        }
+
+        $request->validate($validationRules, [
             'name.required' => 'Nama harus diisi.',
             'email.required' => 'Email harus diisi.',
             'email.email' => 'Format email tidak valid.',
@@ -68,17 +81,25 @@ class UserController extends Controller
             'password.confirmed' => 'Konfirmasi password tidak cocok.',
             'role.required' => 'Role harus dipilih.',
             'role.in' => 'Role tidak valid.',
+            'unit_id.required' => 'Unit harus dipilih untuk petugas.',
+            'unit_id.exists' => 'Unit tidak valid.',
         ]);
 
-        User::create([
+        $userData = [
             'name' => $request->name,
             'email' => $request->email,
             'phone' => $request->phone,
             'password' => Hash::make($request->password),
             'role' => $request->role,
-            'is_active' => $request->boolean('is_active', true),
             'email_verified_at' => now(), // Auto verify for admin created users
-        ]);
+        ];
+
+        // Add unit_id for PETUGAS role
+        if ($request->role === 'PETUGAS') {
+            $userData['unit_id'] = $request->unit_id;
+        }
+
+        User::create($userData);
 
         return redirect()->route('users.index')
             ->with('success', 'User berhasil dibuat.');
@@ -92,25 +113,35 @@ class UserController extends Controller
     public function edit(User $user)
     {
         $roles = [
-            'SUPER_ADMIN' => 'Super Admin',
+            'SUPERADMIN' => 'Super Admin',
             'ADMIN' => 'Admin',
             'OPERATOR' => 'Operator',
-            'USER' => 'User'
+            'PIMPINAN' => 'Pimpinan',
+            'PETUGAS' => 'Petugas',
+            'WARGA' => 'Warga'
         ];
 
-        return view('users.edit', compact('user', 'roles'));
+        $units = Unit::active()->orderBy('name')->get();
+
+        return view('users.edit', compact('user', 'roles', 'units'));
     }
 
     public function update(Request $request, User $user)
     {
-        $request->validate([
+        $validationRules = [
             'name' => 'required|string|max:255',
             'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users')->ignore($user->id)],
             'phone' => ['nullable', 'string', 'max:20', Rule::unique('users')->ignore($user->id)],
             'password' => 'nullable|string|min:8|confirmed',
-            'role' => 'required|in:SUPER_ADMIN,ADMIN,OPERATOR,USER',
-            'is_active' => 'boolean'
-        ], [
+            'role' => 'required|in:SUPERADMIN,ADMIN,OPERATOR,PIMPINAN,PETUGAS,WARGA',
+        ];
+
+        // Unit is required for PETUGAS role
+        if ($request->role === 'PETUGAS') {
+            $validationRules['unit_id'] = 'required|exists:units,id';
+        }
+
+        $request->validate($validationRules, [
             'name.required' => 'Nama harus diisi.',
             'email.required' => 'Email harus diisi.',
             'email.email' => 'Format email tidak valid.',
@@ -120,6 +151,8 @@ class UserController extends Controller
             'password.confirmed' => 'Konfirmasi password tidak cocok.',
             'role.required' => 'Role harus dipilih.',
             'role.in' => 'Role tidak valid.',
+            'unit_id.required' => 'Unit harus dipilih untuk petugas.',
+            'unit_id.exists' => 'Unit tidak valid.',
         ]);
 
         $data = [
@@ -127,8 +160,15 @@ class UserController extends Controller
             'email' => $request->email,
             'phone' => $request->phone,
             'role' => $request->role,
-            'is_active' => $request->boolean('is_active', true),
         ];
+
+        // Handle unit assignment for PETUGAS role
+        if ($request->role === 'PETUGAS') {
+            $data['unit_id'] = $request->unit_id;
+        } else {
+            // Remove unit assignment for non-PETUGAS roles
+            $data['unit_id'] = null;
+        }
 
         // Only update password if provided
         if ($request->filled('password')) {

@@ -69,6 +69,24 @@
                         @enderror
                     </div>
 
+                    <!-- Unit (for PETUGAS role only) -->
+                    <div id="unit-field" style="display: none;">
+                        <label for="unit_id" class="block text-sm font-medium text-gray-700">Unit Tugas</label>
+                        <select name="unit_id" id="unit_id"
+                            class="mt-1 block w-full rounded-md shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm @error('unit_id') border-red-300 @enderror">
+                            <option value="">Pilih Unit</option>
+                            @foreach ($units as $unit)
+                                <option value="{{ $unit->id }}" {{ old('unit_id') == $unit->id ? 'selected' : '' }}>
+                                    {{ $unit->name }} ({{ $unit->type }})
+                                </option>
+                            @endforeach
+                        </select>
+                        @error('unit_id')
+                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                        @enderror
+                        <p class="mt-1 text-sm text-gray-500">Unit diperlukan untuk role Petugas</p>
+                    </div>
+
                     <!-- Password -->
                     <div>
                         <label for="password" class="block text-sm font-medium text-gray-700">Password</label>
@@ -119,4 +137,29 @@
             </form>
         </div>
     </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const roleSelect = document.getElementById('role');
+            const unitField = document.getElementById('unit-field');
+            const unitSelect = document.getElementById('unit_id');
+
+            function toggleUnitField() {
+                if (roleSelect.value === 'PETUGAS') {
+                    unitField.style.display = 'block';
+                    unitSelect.required = true;
+                } else {
+                    unitField.style.display = 'none';
+                    unitSelect.required = false;
+                    unitSelect.value = '';
+                }
+            }
+
+            // Initial check
+            toggleUnitField();
+
+            // Listen for role changes
+            roleSelect.addEventListener('change', toggleUnitField);
+        });
+    </script>
 @endsection

@@ -39,4 +39,8 @@ return [
         'api_key' => env('WHAT3WORDS_API_KEY'),
     ],
 
+    'mapbox' => [
+        'access_token' => env('MAPBOX_ACCESS_TOKEN'),
+    ],
+
 ];

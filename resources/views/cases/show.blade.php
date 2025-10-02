@@ -186,6 +186,29 @@
                                 </div>
                             @endif
 
+                            @if ($case->assignedPetugas)
+                                <div>
+                                    <dt class="text-sm font-medium text-gray-500">Petugas Ditugaskan</dt>
+                                    <dd class="mt-1 text-sm text-gray-900">
+                                        <div class="font-medium">{{ $case->assignedPetugas->name }}</div>
+                                        <div class="text-xs text-gray-500">
+                                            {{ $case->assignedPetugas->phone }}
+                                            @if ($case->assignedPetugas->duty_status === 'ON_DUTY')
+                                                <span
+                                                    class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800 ml-1">
+                                                    Bertugas
+                                                </span>
+                                            @else
+                                                <span
+                                                    class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-800 ml-1">
+                                                    Off Duty
+                                                </span>
+                                            @endif
+                                        </div>
+                                    </dd>
+                                </div>
+                            @endif
+
                             @if ($case->verified_at)
                                 <div>
                                     <dt class="text-sm font-medium text-gray-500">Waktu Verifikasi</dt>
@@ -221,6 +244,98 @@
                         </div>
                         <div class="px-6 py-4">
                             <p class="text-sm text-gray-900 whitespace-pre-wrap">{{ $case->description }}</p>
+                        </div>
+                    </div>
+                @endif
+
+                <!-- Maps Direction (only show if case is dispatched and has assigned petugas) -->
+                @if (
+                    $case->assignedPetugas &&
+                        $case->lat &&
+                        $case->lon &&
+                        in_array($case->status, ['DISPATCHED', 'ON_THE_WAY', 'ON_SCENE']))
+                    <div class="bg-white shadow rounded-lg">
+                        <div class="px-6 py-4 border-b border-gray-200">
+                            <h3 class="text-lg font-medium text-gray-900">Petunjuk Arah ke Lokasi</h3>
+                            <p class="text-sm text-gray-500 mt-1">Rute dari petugas {{ $case->assignedPetugas->name }} ke
+                                lokasi kejadian</p>
+                        </div>
+                        <div class="px-6 py-4">
+                            <!-- Maps Container -->
+                            <div id="map-container"
+                                class="w-full h-96 rounded-lg overflow-hidden border border-gray-300 mb-4 relative"
+                                style="min-height: 400px;">
+                                <div id="directions-map" class="w-full h-full" style="min-height: 400px;"></div>
+                                <!-- Loading overlay -->
+                                <div id="map-loading"
+                                    class="absolute inset-0 bg-white bg-opacity-75 flex items-center justify-center">
+                                    <div class="text-center">
+                                        <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto">
+                                        </div>
+                                        <p class="mt-2 text-sm text-gray-600">Memuat peta...</p>
+                                    </div>
+                                </div>
+                                <!-- Fallback: Open in Google Maps -->
+                                <div id="map-fallback"
+                                    class="absolute inset-0 bg-gray-100 flex items-center justify-center"
+                                    style="display: none;">
+                                    <div class="text-center p-4">
+                                        <svg class="w-12 h-12 text-gray-400 mx-auto mb-3" fill="none"
+                                            stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z">
+                                            </path>
+                                        </svg>
+                                        <p class="text-sm text-gray-600 mb-3">Peta tidak dapat dimuat</p>
+                                        <a href="https://www.google.com/maps/dir/{{ $case->assignedPetugas->last_latitude ?? -6.2088 }},{{ $case->assignedPetugas->last_longitude ?? 106.8456 }}/{{ $case->lat }},{{ $case->lon }}"
+                                            target="_blank"
+                                            class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700">
+                                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor"
+                                                viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14">
+                                                </path>
+                                            </svg>
+                                            Buka di Google Maps
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Route Information -->
+                            <div id="route-info" class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                                <div class="bg-blue-50 p-3 rounded-lg">
+                                    <div class="font-medium text-blue-900">Jarak</div>
+                                    <div id="route-distance" class="text-blue-700">Menghitung...</div>
+                                </div>
+                                <div class="bg-green-50 p-3 rounded-lg">
+                                    <div class="font-medium text-green-900">Estimasi Waktu</div>
+                                    <div id="route-duration" class="text-green-700">Menghitung...</div>
+                                </div>
+                                <div class="bg-yellow-50 p-3 rounded-lg">
+                                    <div class="font-medium text-yellow-900">Status Petugas</div>
+                                    <div id="petugas-status" class="text-yellow-700">
+                                        @if ($case->assignedPetugas->last_latitude && $case->assignedPetugas->last_longitude)
+                                            Lokasi Tersedia
+                                        @else
+                                            Lokasi Tidak Tersedia
+                                        @endif
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Refresh Button -->
+                            <div class="mt-4 text-center">
+                                <button id="refresh-directions"
+                                    class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15">
+                                        </path>
+                                    </svg>
+                                    Perbarui Rute
+                                </button>
+                            </div>
                         </div>
                     </div>
                 @endif
@@ -358,7 +473,8 @@
                         @if (in_array($case->status, ['NEW', 'VERIFIED']))
                             <!-- Dispatch to Unit -->
                             <div>
-                                <form method="POST" action="{{ route('cases.dispatch', $case) }}" class="space-y-3">
+                                <form method="POST" action="{{ route('cases.dispatch', $case) }}" class="space-y-3"
+                                    id="dispatch-form">
                                     @csrf
                                     <div>
                                         <label for="unit_id" class="block text-sm font-medium text-gray-700">Unit</label>
@@ -371,6 +487,30 @@
                                                 </option>
                                             @endforeach
                                         </select>
+                                    </div>
+
+                                    <div id="petugas-container" style="display: none;">
+                                        <label for="petugas_id" class="block text-sm font-medium text-gray-700">
+                                            Petugas (Opsional)
+                                            <span class="text-xs text-gray-500 ml-1">- Pilih petugas spesifik atau biarkan
+                                                kosong</span>
+                                        </label>
+                                        <select name="petugas_id" id="petugas_id"
+                                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm">
+                                            <option value="">Pilih Petugas (Opsional)</option>
+                                        </select>
+                                        <div id="petugas-loading" class="mt-2 text-sm text-gray-500"
+                                            style="display: none;">
+                                            <svg class="animate-spin h-4 w-4 inline mr-2" fill="none"
+                                                viewBox="0 0 24 24">
+                                                <circle class="opacity-25" cx="12" cy="12" r="10"
+                                                    stroke="currentColor" stroke-width="4"></circle>
+                                                <path class="opacity-75" fill="currentColor"
+                                                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                                                </path>
+                                            </svg>
+                                            Memuat daftar petugas...
+                                        </div>
                                     </div>
 
                                     <div>
@@ -514,4 +654,376 @@
             </div>
         </div>
     </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const unitSelect = document.getElementById('unit_id');
+            const petugasContainer = document.getElementById('petugas-container');
+            const petugasSelect = document.getElementById('petugas_id');
+            const petugasLoading = document.getElementById('petugas-loading');
+
+            if (unitSelect) {
+                unitSelect.addEventListener('change', function() {
+                    const unitId = this.value;
+
+                    if (unitId) {
+                        // Show container and loading
+                        petugasContainer.style.display = 'block';
+                        petugasLoading.style.display = 'block';
+                        petugasSelect.innerHTML = '<option value="">Pilih Petugas (Opsional)</option>';
+                        petugasSelect.disabled = true;
+
+                        // Fetch petugas for selected unit
+                        console.log('Fetching petugas for unit ID:', unitId);
+                        fetch(`{{ url('/api/units') }}/${unitId}/petugas`, {
+                                method: 'GET',
+                                headers: {
+                                    'Accept': 'application/json',
+                                    'X-Requested-With': 'XMLHttpRequest',
+                                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')
+                                        .getAttribute('content')
+                                }
+                            })
+                            .then(response => {
+                                console.log('Response status:', response.status);
+                                console.log('Response OK:', response.ok);
+                                if (!response.ok) {
+                                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                                }
+                                return response.json();
+                            })
+                            .then(data => {
+                                console.log('Response data:', data);
+                                petugasLoading.style.display = 'none';
+
+                                if (data.success && data.data.length > 0) {
+                                    // Add petugas options
+                                    data.data.forEach(petugas => {
+                                        const option = document.createElement('option');
+                                        option.value = petugas.id;
+                                        option.textContent = petugas.name;
+                                        petugasSelect.appendChild(option);
+                                    });
+
+                                    petugasSelect.disabled = false;
+                                } else {
+                                    petugasSelect.innerHTML =
+                                        '<option value="">Tidak ada petugas tersedia</option>';
+                                    petugasSelect.disabled = true;
+                                }
+                            })
+                            .catch(error => {
+                                console.error('Fetch error:', error);
+                                console.error('Error details:', error.message);
+                                petugasLoading.style.display = 'none';
+                                petugasSelect.innerHTML =
+                                    '<option value="">Error memuat petugas</option>';
+                                petugasSelect.disabled = true;
+
+                                // Show more detailed error info
+                                alert('Error memuat petugas: ' + error.message);
+                            });
+                    } else {
+                        // Hide petugas container if no unit selected
+                        petugasContainer.style.display = 'none';
+                        petugasSelect.innerHTML = '<option value="">Pilih Petugas (Opsional)</option>';
+                    }
+                });
+            }
+        });
+    </script>
+
+    <!-- Mapbox Directions Script -->
+    @if (
+        $case->assignedPetugas &&
+            $case->lat &&
+            $case->lon &&
+            in_array($case->status, ['DISPATCHED', 'ON_THE_WAY', 'ON_SCENE']))
+        <script>
+            // Initialize when DOM is ready
+            document.addEventListener('DOMContentLoaded', function() {
+                console.log('🚀 Initializing Mapbox...');
+
+                // Check DOM elements
+                const mapContainer = document.getElementById('directions-map');
+                const loading = document.getElementById('map-loading');
+                const fallback = document.getElementById('map-fallback');
+
+                console.log('DOM Elements Check:');
+                console.log('- Map Container:', mapContainer);
+                console.log('- Loading:', loading);
+                console.log('- Fallback:', fallback);
+
+                if (!mapContainer) {
+                    console.error('❌ Map container not found!');
+                    return;
+                }
+
+                // Configuration
+                const token = '{{ config('services.mapbox.access_token') }}';
+                const caseLocation = [{{ $case->lon }}, {{ $case->lat }}];
+                @if ($case->assignedPetugas->last_latitude && $case->assignedPetugas->last_longitude)
+                    const petugasLocation = [{{ $case->assignedPetugas->last_longitude }},
+                        {{ $case->assignedPetugas->last_latitude }}
+                    ];
+                @else
+                    const petugasLocation = [106.8456, -6.2088];
+                @endif
+
+                console.log('Configuration:');
+                console.log('- Token:', token ? 'Present' : 'Missing');
+                console.log('- Case Location:', caseLocation);
+                console.log('- Petugas Location:', petugasLocation);
+
+                // Check if Mapbox is available
+                if (typeof mapboxgl === 'undefined') {
+                    console.error('❌ Mapbox GL JS not loaded');
+                    showFallback();
+                    return;
+                }
+
+                console.log('✅ Mapbox GL JS loaded:', mapboxgl.version);
+
+                // Get directions first, then initialize map
+                getDirections().then(() => {
+                    // Initialize map after getting directions
+                    initializeMap();
+                });
+
+                // Functions
+                function getDirections() {
+                    console.log('📡 Getting directions...');
+                    const url =
+                        `https://api.mapbox.com/directions/v5/mapbox/driving/${petugasLocation[0]},${petugasLocation[1]};${caseLocation[0]},${caseLocation[1]}?geometries=geojson&access_token=${token}`;
+
+                    return fetch(url)
+                        .then(response => response.json())
+                        .then(data => {
+                            console.log('📊 Directions response:', data);
+                            if (data.routes && data.routes.length > 0) {
+                                const route = data.routes[0];
+                                const distance = (route.distance / 1000).toFixed(1) + ' km';
+                                const duration = Math.round(route.duration / 60) + ' menit';
+
+                                document.getElementById('route-distance').textContent = distance;
+                                document.getElementById('route-duration').textContent = duration;
+                                console.log('✅ Directions updated:', {
+                                    distance,
+                                    duration
+                                });
+
+                                // Store route data for map display
+                                window.routeGeometry = route.geometry;
+                                return route.geometry;
+                            } else {
+                                document.getElementById('route-distance').textContent = 'Tidak tersedia';
+                                document.getElementById('route-duration').textContent = 'Tidak tersedia';
+                                return null;
+                            }
+                        })
+                        .catch(error => {
+                            console.error('❌ Directions error:', error);
+                            document.getElementById('route-distance').textContent = 'Error';
+                            document.getElementById('route-duration').textContent = 'Error';
+                            return null;
+                        });
+                }
+
+                function initializeMap() {
+                    console.log('🗺️ Initializing map...');
+
+                    // Check container dimensions
+                    const container = document.getElementById('directions-map');
+                    const containerRect = container.getBoundingClientRect();
+                    console.log('Container dimensions:', {
+                        width: containerRect.width,
+                        height: containerRect.height,
+                        display: window.getComputedStyle(container).display,
+                        visibility: window.getComputedStyle(container).visibility
+                    });
+
+                    try {
+                        mapboxgl.accessToken = token;
+
+                        console.log('🏗️ Creating map instance...');
+                        const map = new mapboxgl.Map({
+                            container: 'directions-map',
+                            style: 'mapbox://styles/mapbox/streets-v12',
+                            center: caseLocation,
+                            zoom: 12
+                        });
+
+                        console.log('✅ Map instance created');
+
+                        // Store map instance globally for refresh functionality
+                        window.mapInstance = map;
+
+                        // Force resize after a short delay
+                        setTimeout(() => {
+                            console.log('🔄 Triggering map resize...');
+                            map.resize();
+                        }, 500);
+
+                        map.on('load', function() {
+                            console.log('✅ Map loaded successfully');
+                            if (loading) loading.style.display = 'none';
+
+                            // Add markers with custom popups
+                            console.log('📍 Adding markers...');
+
+                            // Case location marker (red) with popup
+                            new mapboxgl.Marker({
+                                    color: '#ef4444'
+                                })
+                                .setLngLat(caseLocation)
+                                .setPopup(new mapboxgl.Popup({
+                                    offset: 25
+                                }).setHTML(`
+                                <div class="p-3">
+                                    <h3 class="font-bold text-sm text-red-700">📍 Lokasi Kejadian</h3>
+                                    <p class="text-xs text-gray-600 mt-1">{{ $case->locator_text }}</p>
+                                    <p class="text-xs text-gray-500">{{ $case->lat }}, {{ $case->lon }}</p>
+                                </div>
+                            `))
+                                .addTo(map);
+
+                            // Petugas location marker (blue) with popup  
+                            new mapboxgl.Marker({
+                                    color: '#3b82f6'
+                                })
+                                .setLngLat(petugasLocation)
+                                .setPopup(new mapboxgl.Popup({
+                                    offset: 25
+                                }).setHTML(`
+                                <div class="p-3">
+                                    <h3 class="font-bold text-sm text-blue-700">👮‍♂️ {{ $case->assignedPetugas->name }}</h3>
+                                    <p class="text-xs text-gray-600">{{ $case->assignedPetugas->unit->name ?? 'Unit tidak tersedia' }}</p>
+                                    @if (!$case->assignedPetugas->last_latitude || !$case->assignedPetugas->last_longitude)
+                                        <p class="text-xs text-orange-600">⚠️ Lokasi perkiraan</p>
+                                    @endif
+                                </div>
+                            `))
+                                .addTo(map);
+
+                            // Add route line if available
+                            if (window.routeGeometry) {
+                                console.log('🛣️ Adding route line...');
+                                addRouteToMap(map, window.routeGeometry);
+                            }
+
+                            // Fit bounds to show both markers and route
+                            console.log('🔍 Fitting bounds...');
+                            const bounds = new mapboxgl.LngLatBounds();
+                            bounds.extend(caseLocation);
+                            bounds.extend(petugasLocation);
+                            map.fitBounds(bounds, {
+                                padding: 60
+                            });
+
+                            console.log('✅ Map initialization complete');
+                        });
+
+                        map.on('error', function(e) {
+                            console.error('❌ Map error:', e);
+                            showFallback();
+                        });
+
+                        map.on('styledata', function() {
+                            console.log('🎨 Map style loaded');
+                        });
+
+                        map.on('sourcedata', function() {
+                            console.log('📊 Map source data loaded');
+                        });
+
+                        // Timeout for map loading
+                        setTimeout(function() {
+                            if (loading && loading.style.display !== 'none') {
+                                console.warn('⏰ Map loading timeout');
+                                showFallback();
+                            }
+                        }, 10000);
+
+                    } catch (error) {
+                        console.error('❌ Map init error:', error);
+                        showFallback();
+                    }
+                }
+
+                function showFallback() {
+                    console.log('🔄 Showing fallback...');
+                    if (loading) loading.style.display = 'none';
+                    if (fallback) fallback.style.display = 'flex';
+                }
+
+                function addRouteToMap(map, geometry) {
+                    console.log('🗺️ Adding route line to map...');
+
+                    // Remove existing route if any
+                    if (map.getSource('route')) {
+                        map.removeLayer('route');
+                        map.removeSource('route');
+                    }
+
+                    // Add route source
+                    map.addSource('route', {
+                        type: 'geojson',
+                        data: {
+                            type: 'Feature',
+                            properties: {},
+                            geometry: geometry
+                        }
+                    });
+
+                    // Add route layer with blue line
+                    map.addLayer({
+                        id: 'route',
+                        type: 'line',
+                        source: 'route',
+                        layout: {
+                            'line-join': 'round',
+                            'line-cap': 'round'
+                        },
+                        paint: {
+                            'line-color': '#3b82f6',
+                            'line-width': 5,
+                            'line-opacity': 0.8
+                        }
+                    });
+
+                    // Add route outline for better visibility
+                    map.addLayer({
+                        id: 'route-outline',
+                        type: 'line',
+                        source: 'route',
+                        layout: {
+                            'line-join': 'round',
+                            'line-cap': 'round'
+                        },
+                        paint: {
+                            'line-color': '#1e40af',
+                            'line-width': 7,
+                            'line-opacity': 0.4
+                        }
+                    }, 'route'); // Add outline below the main route
+
+                    console.log('✅ Route line added successfully');
+                }
+
+                // Refresh button
+                const refreshBtn = document.getElementById('refresh-directions');
+                if (refreshBtn) {
+                    refreshBtn.addEventListener('click', function() {
+                        console.log('🔄 Refresh button clicked');
+                        getDirections().then(() => {
+                            // Update route line on map if map exists
+                            if (window.mapInstance && window.routeGeometry) {
+                                addRouteToMap(window.mapInstance, window.routeGeometry);
+                            }
+                        });
+                    });
+                }
+            });
+        </script>
+    @endif
 @endsection

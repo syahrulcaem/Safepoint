@@ -4,6 +4,7 @@ use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\CaseActionController;
 use App\Http\Controllers\CaseController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\UnitController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
@@ -29,6 +30,13 @@ Route::middleware(['auth', 'web.role'])->group(function () {
     Route::post('/cases/{case}/dispatch', [CaseController::class, 'dispatch'])->name('cases.dispatch');
     Route::post('/cases/{case}/close', [CaseController::class, 'close'])->name('cases.close');
     Route::post('/cases/{case}/cancel', [CaseController::class, 'cancel'])->name('cases.cancel');
+
+    // AJAX Endpoints
+    Route::get('/api/units/{unit}/petugas', [CaseController::class, 'getPetugasByUnit'])->name('units.petugas');
+
+    // Unit Management - Super Admin Only
+    Route::resource('units', UnitController::class);
+    Route::post('/units/{unit}/toggle-status', [UnitController::class, 'toggleStatus'])->name('units.toggle-status');
 
     // User Management - Super Admin Only
     Route::resource('users', UserController::class);

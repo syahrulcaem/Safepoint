@@ -425,6 +425,12 @@
                                                     {{ $case->assignedUnit->name }}
                                                 </div>
                                                 <div class="text-xs text-gray-500">{{ $case->assignedUnit->type }}</div>
+                                                @if ($case->assignedPetugas)
+                                                    <div class="text-xs text-blue-600 font-medium mt-1"
+                                                        title="{{ $case->assignedPetugas->name }}">
+                                                        ↳ {{ Str::limit($case->assignedPetugas->name, 15) }}
+                                                    </div>
+                                                @endif
                                             @else
                                                 <span class="text-gray-400 italic text-xs">Belum ditugaskan</span>
                                             @endif

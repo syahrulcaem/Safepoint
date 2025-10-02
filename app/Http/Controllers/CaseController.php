@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Cases;
 use App\Models\Unit;
+use App\Models\User;
 use App\Models\CaseEvent;
 use App\Services\What3WordsService;
 use Illuminate\Http\Request;
@@ -20,7 +21,7 @@ class CaseController extends Controller
     }
     public function index(Request $request)
     {
-        $query = Cases::with(['reporterUser', 'assignedUnit']);
+        $query = Cases::with(['reporterUser', 'assignedUnit', 'assignedPetugas']);
 
         // Filter cases for PETUGAS role - only show cases assigned to their unit
         if (Auth::user()->canViewAssignedCases()) {
@@ -92,6 +93,7 @@ class CaseController extends Controller
         $case->load([
             'reporterUser.citizenProfile',
             'assignedUnit',
+            'assignedPetugas',
             'caseEvents' => function ($query) {
                 $query->with('actor')->orderBy('created_at', 'desc');
             },
@@ -186,6 +188,7 @@ class CaseController extends Controller
     {
         $request->validate([
             'unit_id' => 'required|exists:units,id',
+            'petugas_id' => 'nullable|exists:users,id',
             'notes' => 'nullable|string|max:500'
         ]);
 
@@ -194,29 +197,92 @@ class CaseController extends Controller
         }
 
         $unit = Unit::findOrFail($request->unit_id);
+        $petugas = null;
+
+        // Validasi petugas jika dipilih
+        if ($request->petugas_id) {
+            $petugas = User::where('id', $request->petugas_id)
+                ->where('role', 'PETUGAS')
+                ->where('unit_id', $request->unit_id)
+                ->first();
+
+            if (!$petugas) {
+                return back()->with('error', 'Petugas yang dipilih tidak valid atau tidak terdaftar di unit tersebut.');
+            }
+        }
 
         $case->update([
             'status' => 'DISPATCHED',
             'assigned_unit_id' => $unit->id,
+            'assigned_petugas_id' => $petugas ? $petugas->id : null,
             'dispatched_at' => now()
         ]);
 
         // Create case event
+        $eventNotes = $request->notes ?: "Dikirim ke unit {$unit->name}";
+        if ($petugas) {
+            $eventNotes .= " (Petugas: {$petugas->name})";
+        }
+
         CaseEvent::create([
             'case_id' => $case->id,
             'actor_id' => Auth::id(),
             'action' => 'DISPATCHED',
-            'notes' => $request->notes ?: "Dikirim ke unit {$unit->name}",
+            'notes' => $eventNotes,
             'metadata' => [
                 'unit_id' => $unit->id,
                 'unit_name' => $unit->name,
                 'unit_type' => $unit->type,
+                'petugas_id' => $petugas ? $petugas->id : null,
+                'petugas_name' => $petugas ? $petugas->name : null,
                 'previous_status' => $case->getOriginal('status'),
                 'new_status' => 'DISPATCHED'
             ]
         ]);
 
-        return back()->with('success', "Kasus berhasil dikirim ke unit {$unit->name}.");
+        $successMessage = "Kasus berhasil dikirim ke unit {$unit->name}";
+        if ($petugas) {
+            $successMessage .= " (Petugas: {$petugas->name})";
+        }
+
+        return back()->with('success', $successMessage);
+    }
+
+    /**
+     * Get petugas (officers) for a specific unit (for AJAX)
+     */
+    public function getPetugasByUnit(Request $request, Unit $unit)
+    {
+        \Log::info('getPetugasByUnit called', [
+            'unit_id' => $unit->id,
+            'unit_name' => $unit->name
+        ]);
+
+        $petugas = User::where('role', 'PETUGAS')
+            ->where('unit_id', $unit->id)
+            ->select('id', 'name')
+            ->orderBy('name')
+            ->get();
+
+        \Log::info('Petugas query result', [
+            'count' => $petugas->count(),
+            'petugas' => $petugas->pluck('name')->toArray()
+        ]);
+
+        $result = [
+            'success' => true,
+            'data' => $petugas->map(function ($p) {
+                return [
+                    'id' => $p->id,
+                    'name' => $p->name,
+                    'is_available' => true // Semua petugas selalu tersedia
+                ];
+            })
+        ];
+
+        \Log::info('Response data', $result);
+
+        return response()->json($result);
     }
 
     public function close(Request $request, Cases $case)

@@ -118,6 +118,25 @@
                     </div>
                 </div>
             </div>
+
+            <div class="bg-white overflow-hidden shadow rounded-lg">
+                <div class="p-5">
+                    <div class="flex items-center">
+                        <div class="flex-shrink-0">
+                            <div class="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center">
+                                <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
+                                </svg>
+                            </div>
+                        </div>
+                        <div class="ml-3 w-0 flex-1">
+                            <dt class="text-sm font-medium text-gray-500 truncate">Petugas</dt>
+                            <dd class="text-lg font-medium text-gray-900">{{ $roleStats['petugas'] }}</dd>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <!-- Users Table -->
@@ -134,6 +153,10 @@
                                 <th scope="col"
                                     class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                     Role
+                                </th>
+                                <th scope="col"
+                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Unit
                                 </th>
                                 <th scope="col"
                                     class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -173,7 +196,7 @@
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap">
                                         @switch($user->role)
-                                            @case('SUPER_ADMIN')
+                                            @case('SUPERADMIN')
                                                 <span
                                                     class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
                                                     Super Admin
@@ -194,13 +217,35 @@
                                                 </span>
                                             @break
 
-                                            @case('USER')
+                                            @case('PIMPINAN')
+                                                <span
+                                                    class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                                                    Pimpinan
+                                                </span>
+                                            @break
+
+                                            @case('PETUGAS')
                                                 <span
                                                     class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                                    User
+                                                    Petugas
+                                                </span>
+                                            @break
+
+                                            @case('WARGA')
+                                                <span
+                                                    class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                                                    Warga
                                                 </span>
                                             @break
                                         @endswitch
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        @if ($user->unit)
+                                            <div class="text-sm font-medium text-gray-900">{{ $user->unit->name }}</div>
+                                            <div class="text-sm text-gray-500">{{ $user->unit->type }}</div>
+                                        @else
+                                            <span class="text-gray-400 italic text-sm">-</span>
+                                        @endif
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap">
                                         @if ($user->is_active)

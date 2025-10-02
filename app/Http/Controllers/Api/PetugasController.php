@@ -250,8 +250,14 @@ class PetugasController extends Controller
             $status = $request->get('status');
 
             $query = Cases::with(['reporter', 'dispatches', 'lastEvent'])
-                ->whereHas('dispatches', function ($q) use ($user) {
-                    $q->where('unit_id', $user->unit_id);
+                ->where(function ($q) use ($user) {
+                    // Cases assigned to this specific petugas
+                    $q->where('assigned_petugas_id', $user->id)
+                        // OR cases assigned to this petugas's unit (but not to specific petugas)
+                        ->orWhere(function ($subq) use ($user) {
+                            $subq->where('assigned_unit_id', $user->unit_id)
+                                ->whereNull('assigned_petugas_id');
+                        });
                 });
 
             if ($status) {
@@ -302,18 +308,15 @@ class PetugasController extends Controller
             }
 
             // Check if petugas has access to this case
-            $hasAccess = $case->dispatches()
-                ->where('unit_id', $user->unit_id)
-                ->exists();
+            $hasAccess = ($case->assigned_petugas_id === $user->id) ||
+                ($case->assigned_unit_id === $user->unit_id && !$case->assigned_petugas_id);
 
             if (!$hasAccess) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Akses ditolak'
                 ], 403);
-            }
-
-            // Calculate distance from petugas current location
+            }            // Calculate distance from petugas current location
             $distance = null;
             if ($user->last_latitude && $user->last_longitude) {
                 $distance = $this->calculateDistance(
