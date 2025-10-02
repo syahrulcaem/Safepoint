@@ -107,6 +107,53 @@ class AuthController extends Controller
         ]);
     }
 
+    public function petugasLogin(Request $request)
+    {
+        $request->validate([
+            'email' => 'nullable|email',
+            'phone' => 'nullable|string',
+            'password' => 'required|string',
+        ]);
+
+        // At least email or phone must be provided
+        if (!$request->email && !$request->phone) {
+            throw ValidationException::withMessages([
+                'email' => 'Email atau nomor telepon harus diisi.',
+            ]);
+        }
+
+        $user = null;
+        if ($request->email) {
+            $user = User::where('email', $request->email)->first();
+        } elseif ($request->phone) {
+            $user = User::where('phone', $request->phone)->first();
+        }
+
+        if (!$user || !Hash::check($request->password, $user->password)) {
+            throw ValidationException::withMessages([
+                'email' => 'Email/telepon atau password tidak valid.',
+            ]);
+        }
+
+        // Only allow PETUGAS role for petugas mobile app
+        if ($user->role !== 'PETUGAS') {
+            throw ValidationException::withMessages([
+                'email' => 'Akun ini tidak dapat digunakan di aplikasi petugas.',
+            ]);
+        }
+
+        $token = $user->createToken('petugas-mobile-app')->plainTextToken;
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Login petugas berhasil',
+            'data' => [
+                'user' => $user->load('unit'),
+                'token' => $token,
+            ],
+        ]);
+    }
+
     public function logout(Request $request)
     {
         $request->user()->currentAccessToken()->delete();
