@@ -88,7 +88,7 @@ class CaseController extends Controller
         return view('cases.index', compact('cases', 'units', 'categories', 'statuses', 'stats'));
     }
 
-    public function show(Cases $case)
+    public function show(Request $request, Cases $case)
     {
         $case->load([
             'reporterUser.citizenProfile',
@@ -109,6 +109,16 @@ class CaseController extends Controller
             (float) $case->lat,
             (float) $case->lon
         );
+
+        // If this is an AJAX request, return JSON with HTML content
+        if ($request->ajax() || $request->wantsJson()) {
+            $html = view('cases.show-modal', compact('case', 'units', 'googleMapsUrl'))->render();
+            
+            return response()->json([
+                'success' => true,
+                'html' => $html
+            ]);
+        }
 
         return view('cases.show', compact('case', 'units', 'googleMapsUrl'));
     }
@@ -393,6 +403,232 @@ class CaseController extends Controller
             'success' => true,
             'whatsapp_url' => $whatsappUrl,
             'message' => 'Link WhatsApp berhasil dibuat. Anda akan diarahkan ke WhatsApp keluarga.'
+        ]);
+    }
+
+    /**
+     * Get notifications (recent cases) for the current user
+     */
+    public function getNotifications(Request $request)
+    {
+        $limit = $request->get('limit', 10);
+        $user = Auth::user();
+        
+        $query = Cases::query()->with(['reporterUser', 'assignedUnit', 'assignedPetugas']);
+        
+        // For PETUGAS role - only show cases assigned to their unit
+        if ($user->role === 'PETUGAS') {
+            $query->where('assigned_unit_id', $user->unit_id);
+        }
+        
+        $recentCases = $query->orderBy('created_at', 'desc')
+            ->take($limit)
+            ->get();
+        
+        // Get unread count (cases newer than last login or last 24 hours)
+        $lastNotificationCheck = session('last_notification_check', now()->subDay());
+        $unreadCount = Cases::where('created_at', '>', $lastNotificationCheck)->count();
+        
+        return response()->json([
+            'success' => true,
+            'notifications' => $recentCases->map(function ($case) use ($lastNotificationCheck) {
+                return [
+                    'id' => $case->id,
+                    'type' => 'new_case',
+                    'title' => 'Kasus: ' . $case->short_id,
+                    'message' => "Kasus {$case->category} di {$case->location}",
+                    'is_read' => $case->created_at <= $lastNotificationCheck,
+                    'created_at' => $case->created_at->format('Y-m-d H:i:s'),
+                    'created_at_human' => $case->created_at->diffForHumans(),
+                    'data' => [
+                        'case_id' => $case->id
+                    ]
+                ];
+            }),
+            'unread_count' => $unreadCount
+        ]);
+    }
+
+    /**
+     * Get unread notification count only (new cases since last check)
+     */
+    public function getUnreadCount()
+    {
+        $user = Auth::user();
+        $lastNotificationCheck = session('last_notification_check', now()->subDay());
+        
+        $query = Cases::query();
+        
+        // For PETUGAS role - only show cases assigned to their unit
+        if ($user->role === 'PETUGAS') {
+            $query->where('assigned_unit_id', $user->unit_id);
+        }
+        
+        $unreadCount = $query->where('created_at', '>', $lastNotificationCheck)->count();
+        
+        return response()->json([
+            'success' => true,
+            'unread_count' => $unreadCount
+        ]);
+    }
+
+    /**
+     * Update the last time notifications were checked
+     */
+    public function markAllAsRead()
+    {
+        // Store last notification check time in session
+        session(['last_notification_check' => now()]);
+        
+        return response()->json([
+            'success' => true,
+            'message' => 'All notifications marked as read'
+        ]);
+    }
+    
+    /**
+     * Mark a notification (case) as read
+     */
+    public function markNotificationAsRead(Request $request, $id)
+    {
+        $user = Auth::user();
+        $case = Cases::findOrFail($id);
+        
+        // Check if user is authorized to view this case
+        if ($user->role === 'PETUGAS' && $case->assigned_unit_id != $user->unit_id) {
+            return response()->json([
+                'success' => false,
+                'message' => 'You are not authorized to view this case'
+            ], 403);
+        }
+        
+        // Store last notification check time in session
+        session(['last_notification_check' => now()]);
+        
+        return response()->json([
+            'success' => true,
+            'message' => 'Notification marked as read'
+        ]);
+    }
+    
+    /**
+     * Get notifications (recent cases) for the current user
+     */
+    public function getNotifications(Request $request): \Illuminate\Http\JsonResponse
+    {
+        $limit = $request->get('limit', 10);
+        $user = Auth::user();
+        
+        $query = Cases::query()
+            ->with(['reporterUser', 'assignedUnit', 'assignedPetugas'])
+            ->orderBy('created_at', 'desc')
+            ->limit($limit);
+            
+        // Filter cases for PETUGAS role - only show cases assigned to their unit
+        if ($user->canViewAssignedCases()) {
+            $query->where('assigned_unit_id', $user->unit_id);
+        }
+        
+        $cases = $query->get();
+        $unreadCount = $this->getUnreadCountQuery()->count();
+        
+        return response()->json([
+            'success' => true,
+            'notifications' => $cases->map(function ($case) {
+                return [
+                    'id' => $case->id,
+                    'title' => 'Kasus ' . $case->short_id,
+                    'message' => 'Kasus ' . $case->category . ' di ' . $case->location,
+                    'is_read' => $case->notification_read ?? false,
+                    'created_at' => $case->created_at->format('Y-m-d H:i:s'),
+                    'created_at_human' => $case->created_at->diffForHumans(),
+                    'case_id' => $case->id,
+                    'short_id' => $case->short_id,
+                    'status' => $case->status,
+                    'category' => $case->category,
+                    'location' => $case->location
+                ];
+            }),
+            'unread_count' => $unreadCount
+        ]);
+    }
+    
+    /**
+     * Get unread notification count
+     */
+    public function getUnreadCount(): \Illuminate\Http\JsonResponse
+    {
+        $count = $this->getUnreadCountQuery()->count();
+        
+        return response()->json([
+            'success' => true,
+            'count' => $count
+        ]);
+    }
+    
+    /**
+     * Get query for unread cases (notifications)
+     */
+    protected function getUnreadCountQuery()
+    {
+        $user = Auth::user();
+        $query = Cases::query()
+            ->where('notification_read', false)
+            ->orderBy('created_at', 'desc');
+            
+        // Filter cases for PETUGAS role - only show cases assigned to their unit
+        if ($user->canViewAssignedCases()) {
+            $query->where('assigned_unit_id', $user->unit_id);
+        }
+        
+        return $query;
+    }
+    
+    /**
+     * Mark notification as read
+     */
+    public function markNotificationAsRead(Request $request, $id): \Illuminate\Http\JsonResponse
+    {
+        $user = Auth::user();
+        $case = Cases::findOrFail($id);
+        
+        // Check if user is authorized to view this case
+        if ($user->canViewAssignedCases() && $case->assigned_unit_id != $user->unit_id) {
+            return response()->json([
+                'success' => false,
+                'message' => 'You are not authorized to view this case'
+            ], 403);
+        }
+        
+        $case->notification_read = true;
+        $case->save();
+        
+        return response()->json([
+            'success' => true,
+            'message' => 'Notification marked as read'
+        ]);
+    }
+    
+    /**
+     * Mark all notifications as read
+     */
+    public function markAllAsRead(): \Illuminate\Http\JsonResponse
+    {
+        $user = Auth::user();
+        $query = Cases::query()->where('notification_read', false);
+        
+        // Filter cases for PETUGAS role - only show cases assigned to their unit
+        if ($user->canViewAssignedCases()) {
+            $query->where('assigned_unit_id', $user->unit_id);
+        }
+        
+        $count = $query->count();
+        
+        $query->update(['notification_read' => true]);
+        
+        return response()->json([
+            'success' => true,
+            'message' => "Marked {$count} notifications as read"
         ]);
     }
 }

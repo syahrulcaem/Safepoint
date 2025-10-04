@@ -54,6 +54,26 @@ class Cases extends Model
                 $model->id = Str::ulid();
             }
         });
+
+        static::created(function ($model) {
+            // Trigger notification for new case
+            $notificationService = app(\App\Services\NotificationService::class);
+            $notificationService->createNewCaseNotification($model);
+        });
+
+        static::updating(function ($model) {
+            // Check if status is being updated
+            if ($model->isDirty('status')) {
+                $oldStatus = $model->getOriginal('status');
+                $newStatus = $model->status;
+                
+                // Schedule notification after update is complete
+                static::updated(function ($updatedModel) use ($oldStatus, $newStatus) {
+                    $notificationService = app(\App\Services\NotificationService::class);
+                    $notificationService->createCaseUpdateNotification($updatedModel, $oldStatus, $newStatus);
+                });
+            }
+        });
     }
 
     // Accessor for short ID

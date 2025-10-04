@@ -4,6 +4,7 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\ProfileController;
 use App\Http\Controllers\Api\CaseController;
 use App\Http\Controllers\Api\PetugasController;
+use App\Http\Controllers\NotificationController;
 use Illuminate\Support\Facades\Route;
 
 // Public routes
@@ -26,6 +27,12 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/emergency', [CaseController::class, 'create']);
     Route::get('/emergency/{case}', [CaseController::class, 'show']);
     Route::get('/my-cases', [CaseController::class, 'myCases']);
+
+    // Notifications
+    Route::get('/notifications', [NotificationController::class, 'index']);
+    Route::post('/notifications/{id}/read', [NotificationController::class, 'markAsRead']);
+    Route::post('/notifications/mark-all-read', [NotificationController::class, 'markAllAsRead']);
+    Route::get('/notifications/unread-count', [NotificationController::class, 'unreadCount']);
 });
 
 // Protected routes for Petugas (Field Officers)
