@@ -1,154 +1,148 @@
 @extends('layouts.app')
 
 @section('content')
-    <div class="space-y-6">
-        <div>
-            <h1 class="text-2xl font-bold text-gray-900">Dashboard SafePoint</h1>
-            <p class="text-gray-600">Ringkasan status kasus darurat dan monitoring lokasi</p>
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-12">
+                <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+                    <h4 class="mb-sm-0 font-size-18">Dashboard SafePoint</h4>
+                    <div class="page-title-right">
+                        <ol class="breadcrumb m-0">
+                            <li class="breadcrumb-item active">Dashboard</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row mb-4">
+            <div class="col-12">
+            </div>
         </div>
 
         <!-- Statistics Cards -->
-        <div class="grid grid-cols-1 md:grid-cols-4 lg:grid-cols-7 gap-4">
+        <div class="row">
             <!-- Total Cases -->
-            <div class="bg-white overflow-hidden shadow rounded-lg">
-                <div class="p-5">
-                    <div class="flex items-center">
-                        <div class="flex-shrink-0">
-                            <div class="w-8 h-8 bg-gray-500 rounded-full flex items-center justify-center">
-                                <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z">
-                                    </path>
-                                </svg>
+            <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6">
+                <div class="card mini-stats-wid">
+                    <div class="card-body">
+                        <div class="d-flex">
+                            <div class="flex-grow-1">
+                                <p class="text-muted fw-medium">Total</p>
+                                <h4 class="mb-0">{{ $totalCases }}</h4>
                             </div>
-                        </div>
-                        <div class="ml-3 w-0 flex-1">
-                            <dt class="text-sm font-medium text-gray-500 truncate">Total</dt>
-                            <dd class="text-lg font-medium text-gray-900">{{ $totalCases }}</dd>
+                            <div class="flex-shrink-0 align-self-center">
+                                <div class="mini-stat-icon avatar-sm rounded-circle" style="background: linear-gradient(45deg, #dc3545 0%, #c82333 100%) !important;">
+                                    <span class="avatar-title" style="background: linear-gradient(45deg, #dc3545 0%, #c82333 100%) !important;">
+                                        <i class="bx bx-bar-chart-alt-2 font-size-20 text-white"></i>
+                                    </span>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
 
             <!-- New Cases -->
-            <div class="bg-white overflow-hidden shadow rounded-lg">
-                <div class="p-5">
-                    <div class="flex items-center">
-                        <div class="flex-shrink-0">
-                            <div class="w-8 h-8 bg-red-500 rounded-full flex items-center justify-center">
-                                <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
-                                </svg>
+            <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6">
+                <div class="card mini-stats-wid">
+                    <div class="card-body">
+                        <div class="d-flex">
+                            <div class="flex-grow-1">
+                                <p class="text-muted fw-medium">Baru</p>
+                                <h4 class="mb-0">{{ $statusCounts['NEW'] }}</h4>
                             </div>
-                        </div>
-                        <div class="ml-3 w-0 flex-1">
-                            <dt class="text-sm font-medium text-gray-500 truncate">Baru</dt>
-                            <dd class="text-lg font-medium text-gray-900">{{ $statusCounts['NEW'] }}</dd>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Verified Cases -->
-            <div class="bg-white overflow-hidden shadow rounded-lg">
-                <div class="p-5">
-                    <div class="flex items-center">
-                        <div class="flex-shrink-0">
-                            <div class="w-8 h-8 bg-red-400 rounded-full flex items-center justify-center">
-                                <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                                </svg>
+                            <div class="flex-shrink-0 align-self-center">
+                                <div class="mini-stat-icon avatar-sm rounded-circle" style="background: linear-gradient(45deg, #dc3545 0%, #b71c1c 100%) !important;">
+                                    <span class="avatar-title" style="background: linear-gradient(45deg, #dc3545 0%, #b71c1c 100%) !important;">
+                                        <i class="bx bx-plus font-size-20 text-white"></i>
+                                    </span>
+                                </div>
                             </div>
-                        </div>
-                        <div class="ml-3 w-0 flex-1">
-                            <dt class="text-sm font-medium text-gray-500 truncate">Terverifikasi</dt>
-                            <dd class="text-lg font-medium text-gray-900">{{ $statusCounts['VERIFIED'] }}</dd>
                         </div>
                     </div>
                 </div>
             </div>
 
             <!-- Dispatched Cases -->
-            <div class="bg-white overflow-hidden shadow rounded-lg">
-                <div class="p-5">
-                    <div class="flex items-center">
-                        <div class="flex-shrink-0">
-                            <div class="w-8 h-8 bg-red-300 rounded-full flex items-center justify-center">
-                                <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                                </svg>
+            <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6">
+                <div class="card mini-stats-wid">
+                    <div class="card-body">
+                        <div class="d-flex">
+                            <div class="flex-grow-1">
+                                <p class="text-muted fw-medium">Dikirim</p>
+                                <h4 class="mb-0">{{ $statusCounts['DISPATCHED'] }}</h4>
                             </div>
-                        </div>
-                        <div class="ml-3 w-0 flex-1">
-                            <dt class="text-sm font-medium text-gray-500 truncate">Dikirim</dt>
-                            <dd class="text-lg font-medium text-gray-900">{{ $statusCounts['DISPATCHED'] }}</dd>
+                            <div class="flex-shrink-0 align-self-center">
+                                <div class="mini-stat-icon avatar-sm rounded-circle" style="background: linear-gradient(45deg, #dc3545 0%, #b71c1c 100%) !important;">
+                                    <span class="avatar-title" style="background: linear-gradient(45deg, #dc3545 0%, #b71c1c 100%) !important;">
+                                        <i class="bx bx-time font-size-20 text-white"></i>
+                                    </span>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
 
             <!-- On The Way Cases -->
-            <div class="bg-white overflow-hidden shadow rounded-lg">
-                <div class="p-5">
-                    <div class="flex items-center">
-                        <div class="flex-shrink-0">
-                            <div class="w-8 h-8 bg-orange-400 rounded-full flex items-center justify-center">
-                                <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M13 10V3L4 14h7v7l9-11h-7z"></path>
-                                </svg>
+            <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6">
+                <div class="card mini-stats-wid">
+                    <div class="card-body">
+                        <div class="d-flex">
+                            <div class="flex-grow-1">
+                                <p class="text-muted fw-medium">Perjalanan</p>
+                                <h4 class="mb-0">{{ $statusCounts['ON_THE_WAY'] }}</h4>
                             </div>
-                        </div>
-                        <div class="ml-3 w-0 flex-1">
-                            <dt class="text-sm font-medium text-gray-500 truncate">Perjalanan</dt>
-                            <dd class="text-lg font-medium text-gray-900">{{ $statusCounts['ON_THE_WAY'] }}</dd>
+                            <div class="flex-shrink-0 align-self-center">
+                                <div class="mini-stat-icon avatar-sm rounded-circle" style="background: linear-gradient(45deg, #dc3545 0%, #b71c1c 100%) !important;">
+                                    <span class="avatar-title" style="background: linear-gradient(45deg, #dc3545 0%, #b71c1c 100%) !important;">
+                                        <i class="bx bx-car font-size-20 text-white"></i>
+                                    </span>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
 
             <!-- On Scene Cases -->
-            <div class="bg-white overflow-hidden shadow rounded-lg">
-                <div class="p-5">
-                    <div class="flex items-center">
-                        <div class="flex-shrink-0">
-                            <div class="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center">
-                                <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z">
-                                    </path>
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                                </svg>
+            <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6">
+                <div class="card mini-stats-wid">
+                    <div class="card-body">
+                        <div class="d-flex">
+                            <div class="flex-grow-1">
+                                <p class="text-muted fw-medium">Di Lokasi</p>
+                                <h4 class="mb-0">{{ $statusCounts['ON_SCENE'] }}</h4>
                             </div>
-                        </div>
-                        <div class="ml-3 w-0 flex-1">
-                            <dt class="text-sm font-medium text-gray-500 truncate">Di Lokasi</dt>
-                            <dd class="text-lg font-medium text-gray-900">{{ $statusCounts['ON_SCENE'] }}</dd>
+                            <div class="flex-shrink-0 align-self-center">
+                                <div class="mini-stat-icon avatar-sm rounded-circle" style="background: linear-gradient(45deg, #e53e3e 0%, #c53030 100%) !important;">
+                                    <span class="avatar-title" style="background: linear-gradient(45deg, #e53e3e 0%, #c53030 100%) !important;">
+                                        <i class="bx bx-map-pin font-size-20 text-white"></i>
+                                    </span>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
 
             <!-- Closed Cases -->
-            <div class="bg-white overflow-hidden shadow rounded-lg">
-                <div class="p-5">
-                    <div class="flex items-center">
-                        <div class="flex-shrink-0">
-                            <div class="w-8 h-8 bg-gray-400 rounded-full flex items-center justify-center">
-                                <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor"
-                                    viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M5 13l4 4L19 7"></path>
-                                </svg>
+            <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6">
+                <div class="card mini-stats-wid">
+                    <div class="card-body">
+                        <div class="d-flex">
+                            <div class="flex-grow-1">
+                                <p class="text-muted fw-medium">Selesai</p>
+                                <h4 class="mb-0">{{ $statusCounts['CLOSED'] }}</h4>
                             </div>
-                        </div>
-                        <div class="ml-3 w-0 flex-1">
-                            <dt class="text-sm font-medium text-gray-500 truncate">Selesai</dt>
-                            <dd class="text-lg font-medium text-gray-900">{{ $statusCounts['CLOSED'] }}</dd>
+                            <div class="flex-shrink-0 align-self-center">
+                                <div class="mini-stat-icon avatar-sm rounded-circle" style="background: linear-gradient(45deg, #dc3545 0%, #ad1a1a 100%) !important;">
+                                    <span class="avatar-title" style="background: linear-gradient(45deg, #dc3545 0%, #ad1a1a 100%) !important;">
+                                        <i class="bx bx-check font-size-20 text-white"></i>
+                                    </span>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -156,180 +150,124 @@
         </div>
 
         <!-- Map and Recent Cases -->
-        <div class="space-y-6">
+        <div class="row">
             <!-- Mapbox Map - Full Width -->
-            <div class="bg-white shadow rounded-lg">
-                <div class="px-4 py-5 sm:p-6">
-                    <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">
-                        Peta Kasus Aktif
-                    </h3>
-                    <div id="map" style="height: 500px;" class="rounded-lg relative">
-                        <!-- Grid Info Panel -->
-                        <div id="grid-info"
-                            class="absolute bottom-3 left-3 bg-white px-3 py-2 rounded shadow-lg border text-xs text-gray-600 z-10"
-                            style="display: none;">
-                            <div class="font-medium text-red-600 mb-1">Grid 3x3 Meter</div>
-                            <div>Setiap kotak = ~3m x 3m</div>
-                            <div>Zoom in untuk detail lebih presisi</div>
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center justify-content-between mb-4">
+                            <h4 class="card-title">Peta Kasus Aktif</h4>
+                        </div>
+                        <div id="map" style="height: 500px;" class="rounded position-relative">
+                            <!-- Grid Info Panel -->
+                            <div id="grid-info" class="position-absolute"
+                                style="bottom: 15px; left: 15px; background: white; padding: 10px; border-radius: 6px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); border: 1px solid #e9ecef; font-size: 12px; color: #6c757d; z-index: 10; display: none;">
+                                <div class="fw-medium text-danger mb-1">Grid 3x3 Meter</div>
+                                <div>Setiap kotak = ~3m x 3m</div>
+                                <div>Zoom in untuk detail lebih presisi</div>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
+        </div>
 
+        <div class="row">
             <!-- Recent Cases - Scrollable Table -->
-            <div class="bg-white shadow rounded-lg">
-                <div class="px-4 py-5 sm:p-6">
-                    <div class="flex justify-between items-center mb-6">
-                        <h3 class="text-lg leading-6 font-medium text-gray-900">
-                            5 Kasus Terbaru
-                        </h3>
-                        <a href="{{ route('cases.index') }}" class="text-red-600 hover:text-red-500 text-sm font-medium">
-                            Lihat Semua →
-                        </a>
-                    </div>
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center justify-content-between mb-4">
+                            <h4 class="card-title">5 Kasus Terbaru</h4>
+                            <a href="{{ route('cases.index') }}" class="btn btn-sm btn-primary">
+                                Lihat Semua <i class="mdi mdi-arrow-right ms-1"></i>
+                            </a>
+                        </div>
 
-                    @if ($recentCases->count() > 0)
-                        <div class="overflow-x-auto">
-                            <div class="max-h-96 overflow-y-auto">
-                                <table class="min-w-full divide-y divide-gray-200">
-                                    <thead class="bg-gray-50 sticky top-0">
+                        @if ($recentCases->count() > 0)
+                            <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
+                                <table class="table table-nowrap mb-0">
+                                    <thead class="table-light sticky-top">
                                         <tr>
-                                            <th scope="col"
-                                                class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                ID Kasus
-                                            </th>
-                                            <th scope="col"
-                                                class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                Status
-                                            </th>
-                                            <th scope="col"
-                                                class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                Kategori
-                                            </th>
-                                            <th scope="col"
-                                                class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                Lokasi
-                                            </th>
-                                            <th scope="col"
-                                                class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                Unit
-                                            </th>
-                                            <th scope="col"
-                                                class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                Waktu
-                                            </th>
-                                            <th scope="col"
-                                                class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                Aksi
-                                            </th>
+                                            <th scope="col">ID Kasus</th>
+                                            <th scope="col">Status</th>
+                                            <th scope="col">Kategori</th>
+                                            <th scope="col">Lokasi</th>
+                                            <th scope="col">Unit</th>
+                                            <th scope="col">Waktu</th>
+                                            <th scope="col">Aksi</th>
                                         </tr>
                                     </thead>
-                                    <tbody class="bg-white divide-y divide-gray-200">
+                                    <tbody>
                                         @foreach ($recentCases as $case)
-                                            <tr class="hover:bg-gray-50">
-                                                <td class="px-4 py-3 whitespace-nowrap">
-                                                    <div class="flex flex-col">
-                                                        <a href="{{ route('cases.show', $case) }}"
-                                                            class="text-sm font-medium text-red-600 hover:text-red-500">
+                                            <tr>
+                                                <td>
+                                                    <div class="d-flex flex-column">
+                                                        <a href="{{ route('cases.show', $case) }}" class="text-primary fw-medium">
                                                             {{ $case->short_id }}
                                                         </a>
-                                                        <span class="text-xs text-gray-500">
+                                                        <small class="text-muted">
                                                             {{ $case->created_at->format('d/m H:i') }}
-                                                        </span>
+                                                        </small>
                                                     </div>
                                                 </td>
-                                                <td class="px-4 py-3 whitespace-nowrap">
+                                                <td>
                                                     <x-status-badge :status="$case->status" />
                                                 </td>
-                                                <td class="px-4 py-3 whitespace-nowrap">
-                                                    <span
-                                                        class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium
-                                                        {{ $case->category === 'MEDIS' ? 'bg-blue-100 text-blue-800' : '' }}
-                                                        {{ $case->category === 'KEBAKARAN' ? 'bg-red-100 text-red-800' : '' }}
-                                                        {{ $case->category === 'KRIMINAL' ? 'bg-purple-100 text-purple-800' : '' }}
-                                                        {{ $case->category === 'UMUM' ? 'bg-gray-100 text-gray-800' : '' }}
-                                                        {{ in_array($case->category, ['BENCANA_ALAM', 'BANJIR', 'POHON_TUMBANG']) ? 'bg-yellow-100 text-yellow-800' : '' }}
-                                                        {{ in_array($case->category, ['KECELAKAAN', 'KEBOCORAN_GAS']) ? 'bg-orange-100 text-orange-800' : '' }}">
+                                                <td>
+                                                    <span class="badge 
                                                         @switch($case->category)
-                                                            @case('MEDIS')
-                                                                Medis
-                                                            @break
-
-                                                            @case('KEBAKARAN')
-                                                                Kebakaran
-                                                            @break
-
-                                                            @case('KRIMINAL')
-                                                                Kriminal
-                                                            @break
-
-                                                            @case('UMUM')
-                                                                Umum
-                                                            @break
-
-                                                            @case('BENCANA_ALAM')
-                                                                Bencana Alam
-                                                            @break
-
-                                                            @case('KECELAKAAN')
-                                                                Kecelakaan
-                                                            @break
-
-                                                            @case('KEBOCORAN_GAS')
-                                                                Kebocoran Gas
-                                                            @break
-
-                                                            @case('POHON_TUMBANG')
-                                                                Pohon Tumbang
-                                                            @break
-
-                                                            @case('BANJIR')
-                                                                Banjir
-                                                            @break
-
-                                                            @default
-                                                                {{ $case->category }}
+                                                            @case('MEDIS') badge-soft-primary @break
+                                                            @case('KEBAKARAN') badge-soft-danger @break
+                                                            @case('KRIMINAL') badge-soft-dark @break
+                                                            @case('UMUM') badge-soft-secondary @break
+                                                            @case('BENCANA_ALAM') @case('BANJIR') @case('POHON_TUMBANG') badge-soft-warning @break
+                                                            @case('KECELAKAAN') @case('KEBOCORAN_GAS') badge-soft-info @break
+                                                            @default badge-soft-secondary
+                                                        @endswitch
+                                                    ">
+                                                        @switch($case->category)
+                                                            @case('MEDIS') Medis @break
+                                                            @case('KEBAKARAN') Kebakaran @break
+                                                            @case('KRIMINAL') Kriminal @break
+                                                            @case('UMUM') Umum @break
+                                                            @case('BENCANA_ALAM') Bencana Alam @break
+                                                            @case('KECELAKAAN') Kecelakaan @break
+                                                            @case('KEBOCORAN_GAS') Kebocoran Gas @break
+                                                            @case('POHON_TUMBANG') Pohon Tumbang @break
+                                                            @case('BANJIR') Banjir @break
+                                                            @default {{ $case->category }}
                                                         @endswitch
                                                     </span>
                                                 </td>
-                                                <td class="px-4 py-3">
-                                                    <div class="text-sm text-gray-900 max-w-xs truncate"
-                                                        title="{{ $case->location ?: $case->locator_text }}">
+                                                <td>
+                                                    <div class="text-truncate" style="max-width: 200px;" title="{{ $case->location ?: $case->locator_text }}">
                                                         {{ Str::limit($case->location ?: $case->locator_text, 40) }}
                                                     </div>
                                                 </td>
-                                                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
+                                                <td>
                                                     @if ($case->assignedUnit)
-                                                        <div class="flex items-center">
-                                                            <svg class="w-3 h-3 mr-1" fill="none"
-                                                                stroke="currentColor" viewBox="0 0 24 24">
-                                                                <path stroke-linecap="round" stroke-linejoin="round"
-                                                                    stroke-width="2"
-                                                                    d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z">
-                                                                </path>
-                                                            </svg>
-                                                            <span class="truncate max-w-24"
-                                                                title="{{ $case->assignedUnit->name }}">
+                                                        <div class="d-flex align-items-center">
+                                                            <i class="bx bx-group me-1 text-muted"></i>
+                                                            <span class="text-truncate" style="max-width: 100px;" title="{{ $case->assignedUnit->name }}">
                                                                 {{ Str::limit($case->assignedUnit->name, 15) }}
                                                             </span>
                                                         </div>
                                                     @else
-                                                        <span class="text-gray-400">-</span>
+                                                        <span class="text-muted">-</span>
                                                     @endif
                                                 </td>
-                                                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
-                                                    {{ $case->created_at->diffForHumans() }}
+                                                <td>
+                                                    <small class="text-muted">{{ $case->created_at->diffForHumans() }}</small>
                                                 </td>
-                                                <td class="px-4 py-3 whitespace-nowrap text-sm">
-                                                    <div class="flex space-x-2">
-                                                        <a href="{{ route('cases.show', $case) }}"
-                                                            class="text-red-600 hover:text-red-700 font-medium">
+                                                <td>
+                                                    <div class="d-flex gap-2">
+                                                        <button onclick="showCaseDetail('{{ $case->id }}')" class="btn btn-sm btn-outline-primary">
                                                             Detail
-                                                        </a>
+                                                        </button>
                                                         @if ($case->lat && $case->lon)
                                                             <a href="https://www.google.com/maps?q={{ $case->lat }},{{ $case->lon }}"
-                                                                target="_blank"
-                                                                class="text-blue-600 hover:text-blue-700 font-medium">
+                                                                target="_blank" class="btn btn-sm btn-outline-info">
                                                                 Maps
                                                             </a>
                                                         @endif
@@ -340,19 +278,38 @@
                                     </tbody>
                                 </table>
                             </div>
+                        @else
+                            <div class="text-center py-5">
+                                <div class="avatar-md mx-auto mb-4">
+                                    <div class="avatar-title bg-light rounded-circle">
+                                        <i class="bx bx-file font-size-24 text-primary"></i>
+                                    </div>
+                                </div>
+                                <h5 class="font-size-15">Tidak ada kasus</h5>
+                                <p class="text-muted">Belum ada laporan kasus darurat.</p>
+                            </div>
+                        @endif
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Case Detail Modal -->
+    <div class="modal fade" id="caseDetailModal" tabindex="-1" aria-labelledby="caseDetailModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="caseDetailModalLabel">Detail Kasus</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body" id="caseDetailContent">
+                    <div class="text-center py-5">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Loading...</span>
                         </div>
-                    @else
-                        <div class="text-center py-8">
-                            <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor"
-                                viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
-                                </path>
-                            </svg>
-                            <h3 class="mt-2 text-sm font-medium text-gray-900">Tidak ada kasus</h3>
-                            <p class="mt-1 text-sm text-gray-500">Belum ada laporan kasus darurat.</p>
-                        </div>
-                    @endif
+                        <p class="mt-2 text-muted">Memuat detail kasus...</p>
+                    </div>
                 </div>
             </div>
         </div>
@@ -374,7 +331,7 @@
         });
 
         // Active cases data
-        const activeCases = @json($activeCases);
+        const activeCases = {!! json_encode($activeCases) !!};
 
         // Grid toggle functionality
         let gridVisible = false;
@@ -383,14 +340,10 @@
         // Add grid toggle button
         const gridToggle = document.createElement('button');
         gridToggle.innerHTML = `
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
-            </svg>
-            <span class="ml-1 text-xs">Grid 3x3m</span>
+            <i class="bx bx-grid-alt me-1"></i>
+            <span class="small">Grid 3x3m</span>
         `;
-        gridToggle.className =
-            'bg-white px-3 py-2 text-gray-700 border border-gray-300 rounded shadow-sm hover:bg-gray-50 flex items-center text-sm font-medium transition-colors';
-        gridToggle.style.position = 'absolute';
+        gridToggle.className = 'btn btn-sm btn-outline-primary position-absolute';
         gridToggle.style.top = '10px';
         gridToggle.style.right = '10px';
         gridToggle.style.zIndex = '1000';
@@ -488,10 +441,10 @@
             }
 
             infoPanel.innerHTML = `
-                <div class="font-medium text-red-600 mb-1">Grid Presisi Lokasi</div>
+                <div class="fw-medium text-danger mb-1">Grid Presisi Lokasi</div>
                 <div>Setiap kotak = ${gridSize}</div>
                 <div>Zoom: ${Math.round(zoom * 10) / 10}</div>
-                <div class="text-xs text-gray-500 mt-1">Zoom in untuk grid lebih presisi</div>
+                <div class="small text-muted mt-1">Zoom in untuk grid lebih presisi</div>
             `;
         }
 
@@ -507,13 +460,10 @@
                 if (map.getSource('grid-source')) {
                     map.removeSource('grid-source');
                 }
-                gridToggle.style.backgroundColor = '#ffffff';
-                gridToggle.style.color = '#374151';
+                gridToggle.className = 'btn btn-sm btn-outline-primary position-absolute';
                 gridToggle.innerHTML = `
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
-                    </svg>
-                    <span class="ml-1 text-xs">Tampilkan Grid</span>
+                    <i class="bx bx-grid-alt me-1"></i>
+                    <span class="small">Tampilkan Grid</span>
                 `;
                 infoPanel.style.display = 'none';
                 gridVisible = false;
@@ -544,13 +494,10 @@
                     }
                 });
 
-                gridToggle.style.backgroundColor = '#ef4444';
-                gridToggle.style.color = '#ffffff';
+                gridToggle.className = 'btn btn-sm btn-primary position-absolute';
                 gridToggle.innerHTML = `
-                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M4 6h16M4 12h16M4 18h16"></path>
-                    </svg>
-                    <span class="ml-1 text-xs">Sembunyikan Grid</span>
+                    <i class="bx bx-grid-alt me-1"></i>
+                    <span class="small">Sembunyikan Grid</span>
                 `;
                 infoPanel.style.display = 'block';
                 updateGridInfo();
@@ -583,8 +530,10 @@
         // Add hover coordinate display
         const coordinateDisplay = document.createElement('div');
         coordinateDisplay.id = 'coordinate-display';
-        coordinateDisplay.className =
-            'absolute top-3 left-3 bg-white px-3 py-2 rounded shadow-lg border text-xs text-gray-600 z-10';
+        coordinateDisplay.className = 'position-absolute bg-white border rounded p-2 small text-muted';
+        coordinateDisplay.style.top = '15px';
+        coordinateDisplay.style.left = '15px';
+        coordinateDisplay.style.zIndex = '10';
         coordinateDisplay.style.display = 'none';
         document.getElementById('map').appendChild(coordinateDisplay);
 
@@ -595,7 +544,7 @@
                 const lng = e.lngLat.lng.toFixed(6);
 
                 coordinateDisplay.innerHTML = `
-                    <div class="font-medium text-red-600">Koordinat Presisi</div>
+                    <div class="fw-medium text-primary">Koordinat Presisi</div>
                     <div>Lat: ${lat}</div>
                     <div>Lng: ${lng}</div>
                 `;
@@ -635,12 +584,12 @@
                     // Create popup content
                     const popupContent = `
                         <div class="p-2">
-                            <h3 class="font-bold text-sm">${caseData.short_id}</h3>
-                            <p class="text-sm text-gray-600">${caseData.category}</p>
-                            <p class="text-xs text-gray-500">${caseData.location}</p>
-                            <p class="text-xs text-gray-500">${new Date(caseData.created_at).toLocaleString('id-ID')}</p>
-                            <div class="mt-2">
-                                <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800">
+                            <h6 class="fw-bold">${caseData.short_id}</h6>
+                            <p class="mb-1 small text-muted">${caseData.category}</p>
+                            <p class="mb-1 small text-muted">${caseData.location}</p>
+                            <p class="mb-2 small text-muted">${new Date(caseData.created_at).toLocaleString('id-ID')}</p>
+                            <div>
+                                <span class="badge badge-soft-primary">
                                     ${getStatusLabel(caseData.status)}
                                 </span>
                             </div>
@@ -684,6 +633,54 @@
                 'CANCELLED': 'Dibatalkan'
             };
             return labels[status] || status;
+        }
+
+        // Show case detail in modal
+        function showCaseDetail(caseId) {
+            const modal = new bootstrap.Modal(document.getElementById('caseDetailModal'));
+            const modalContent = document.getElementById('caseDetailContent');
+            
+            // Show loading
+            modalContent.innerHTML = `
+                <div class="text-center py-5">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p class="mt-2 text-muted">Memuat detail kasus...</p>
+                </div>
+            `;
+            
+            modal.show();
+            
+            // Fetch case details
+            fetch(`/cases/${caseId}`, {
+                headers: {
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    modalContent.innerHTML = data.html;
+                } else {
+                    modalContent.innerHTML = `
+                        <div class="alert alert-danger">
+                            <h6>Error</h6>
+                            <p class="mb-0">${data.message || 'Gagal memuat detail kasus'}</p>
+                        </div>
+                    `;
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                modalContent.innerHTML = `
+                    <div class="alert alert-danger">
+                        <h6>Error</h6>
+                        <p class="mb-0">Terjadi kesalahan saat memuat detail kasus</p>
+                    </div>
+                `;
+            });
         }
     </script>
 @endsection

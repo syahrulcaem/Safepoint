@@ -4,6 +4,7 @@ use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\CaseActionController;
 use App\Http\Controllers\CaseController;
 use App\Http\Controllers\DashboardController;
+// use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\UnitController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
@@ -43,4 +44,10 @@ Route::middleware(['auth', 'web.role'])->group(function () {
     Route::post('/users/{user}/toggle-status', [UserController::class, 'toggleStatus'])->name('users.toggle-status');
     Route::get('/users/{user}/whatsapp', [UserController::class, 'whatsapp'])->name('users.whatsapp');
     Route::post('/users/{user}/send-whatsapp', [UserController::class, 'sendWhatsapp'])->name('users.send-whatsapp');
+    
+    // Notifications
+    Route::get('/api/notifications', [CaseController::class, 'getNotifications'])->name('notifications.index');
+    Route::post('/api/notifications/{id}/read', [CaseController::class, 'markNotificationAsRead'])->name('notifications.read');
+    Route::post('/api/notifications/mark-all-read', [CaseController::class, 'markAllAsRead'])->name('notifications.markAllRead');
+    Route::get('/api/notifications/unread-count', [CaseController::class, 'getUnreadCount'])->name('notifications.unreadCount');
 });
