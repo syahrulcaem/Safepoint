@@ -699,6 +699,140 @@ class PetugasController extends Controller
     }
 
     /**
+     * Check for updates (polling endpoint)
+     */
+    public function checkUpdates(Request $request)
+    {
+        try {
+            $user = $request->user();
+            $lastCheck = $request->get('last_check');
+
+            // If no last_check provided, default to 5 minutes ago
+            if (!$lastCheck) {
+                $lastCheck = now()->subMinutes(5)->toISOString();
+            }
+
+            $lastCheckTime = \Carbon\Carbon::parse($lastCheck);
+
+            // Get new assignments since last check
+            $newAssignments = Cases::with(['reporterUser.citizenProfile'])
+                ->where(function ($q) use ($user) {
+                    // Cases assigned to this specific petugas
+                    $q->where('assigned_petugas_id', $user->id)
+                        // OR cases assigned to this petugas's unit (but not to specific petugas)
+                        ->orWhere(function ($subq) use ($user) {
+                            $subq->where('assigned_unit_id', $user->unit_id)
+                                ->whereNull('assigned_petugas_id');
+                        });
+                })
+                ->where('dispatched_at', '>', $lastCheckTime)
+                ->orderBy('dispatched_at', 'desc')
+                ->get();
+
+            // Get status updates for existing assigned cases
+            $statusUpdates = Cases::with(['caseEvents' => function ($q) use ($lastCheckTime) {
+                $q->where('created_at', '>', $lastCheckTime)
+                    ->orderBy('created_at', 'desc');
+            }])
+                ->where(function ($q) use ($user) {
+                    $q->where('assigned_petugas_id', $user->id)
+                        ->orWhere(function ($subq) use ($user) {
+                            $subq->where('assigned_unit_id', $user->unit_id)
+                                ->whereNull('assigned_petugas_id');
+                        });
+                })
+                ->where('updated_at', '>', $lastCheckTime)
+                ->whereNotIn('status', ['NEW', 'PENDING']) // Only dispatched cases
+                ->get();
+
+            // Calculate distances for new assignments
+            $enrichedAssignments = $newAssignments->map(function ($case) use ($user) {
+                $distance = null;
+                $eta = null;
+
+                if ($user->last_latitude && $user->last_longitude && $case->lat && $case->lon) {
+                    $distance = $this->calculateDistance(
+                        $user->last_latitude,
+                        $user->last_longitude,
+                        (float) $case->lat,
+                        (float) $case->lon
+                    );
+
+                    // Simple ETA calculation (distance / average speed 40km/h)
+                    $eta = round(($distance / 40) * 60); // minutes
+                }
+
+                return [
+                    'id' => $case->id,
+                    'category' => $case->category,
+                    'description' => $case->description,
+                    'status' => $case->status,
+                    'latitude' => $case->lat,
+                    'longitude' => $case->lon,
+                    'locator_text' => $case->locator_text,
+                    'reporter_name' => $case->reporterUser->name ?? 'Unknown',
+                    'reporter_phone' => $case->phone ?? $case->reporterUser->phone ?? null,
+                    'distance_km' => $distance,
+                    'eta_minutes' => $eta,
+                    'dispatched_at' => $case->dispatched_at,
+                    'created_at' => $case->created_at,
+                    'google_maps_url' => "https://www.google.com/maps?q={$case->lat},{$case->lon}",
+                    'priority' => $this->calculatePriority($case->category, $distance)
+                ];
+            });
+
+            $hasUpdates = $newAssignments->isNotEmpty() ||
+                $statusUpdates->isNotEmpty();
+
+            return response()->json([
+                'success' => true,
+                'data' => [
+                    'has_updates' => $hasUpdates,
+                    'new_assignments' => $enrichedAssignments,
+                    'status_updates' => $statusUpdates,
+                    'last_check' => now()->toISOString(),
+                    'petugas_location' => [
+                        'latitude' => $user->last_latitude,
+                        'longitude' => $user->last_longitude,
+                        'updated_at' => $user->last_location_update
+                    ]
+                ]
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error checking updates: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal mengecek update'
+            ], 500);
+        }
+    }
+
+    /**
+     * Calculate priority based on category and distance
+     */
+    private function calculatePriority($category, $distance)
+    {
+        $categoryPriority = [
+            'BENCANA_ALAM' => 5,
+            'KECELAKAAN' => 4,
+            'KEBOCORAN_GAS' => 4,
+            'BANJIR' => 3,
+            'POHON_TUMBANG' => 2,
+            'UMUM' => 1
+        ];
+
+        $basePriority = $categoryPriority[$category] ?? 1;
+
+        // Increase priority if closer
+        if ($distance !== null) {
+            if ($distance < 1) $basePriority += 2;
+            elseif ($distance < 3) $basePriority += 1;
+        }
+
+        return min($basePriority, 5); // Max priority 5
+    }
+
+    /**
      * Calculate distance between two coordinates in kilometers
      */
     private function calculateDistance($lat1, $lon1, $lat2, $lon2)
@@ -728,5 +862,75 @@ class PetugasController extends Controller
         ];
 
         return $messages[$template] ?? 'Pesan tidak ditemukan';
+    }
+
+    /**
+     * Get What3Words address from coordinates
+     */
+    public function getWhat3Words(Request $request, $lat, $lon)
+    {
+        try {
+            $what3words = $this->what3words->convertToWords(
+                (float) $lat,
+                (float) $lon
+            );
+
+            return response()->json([
+                'success' => true,
+                'data' => [
+                    'coordinates' => [
+                        'latitude' => (float) $lat,
+                        'longitude' => (float) $lon
+                    ],
+                    'what3words' => $what3words,
+                    'google_maps_url' => "https://www.google.com/maps?q={$lat},{$lon}"
+                ]
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error getting What3Words: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal mengambil What3Words address'
+            ], 500);
+        }
+    }
+
+    /**
+     * Get coordinates from What3Words address
+     */
+    public function getCoordinatesFromWhat3Words(Request $request)
+    {
+        $request->validate([
+            'words' => 'required|string|regex:/^[a-zA-Z0-9]+\.[a-zA-Z0-9]+\.[a-zA-Z0-9]+$/'
+        ]);
+
+        try {
+            $coordinates = $this->what3words->convertToCoordinates($request->words);
+
+            if (!$coordinates) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'What3Words address tidak valid atau tidak ditemukan'
+                ], 422);
+            }
+
+            return response()->json([
+                'success' => true,
+                'data' => [
+                    'what3words' => $request->words,
+                    'coordinates' => [
+                        'latitude' => $coordinates['latitude'],
+                        'longitude' => $coordinates['longitude']
+                    ],
+                    'google_maps_url' => "https://www.google.com/maps?q={$coordinates['latitude']},{$coordinates['longitude']}"
+                ]
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error getting coordinates from What3Words: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal mengambil koordinat dari What3Words address'
+            ], 500);
+        }
     }
 }

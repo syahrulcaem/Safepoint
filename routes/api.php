@@ -4,12 +4,17 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\ProfileController;
 use App\Http\Controllers\Api\CaseController;
 use App\Http\Controllers\Api\PetugasController;
+use App\Http\Controllers\Api\PublicEmergencyController;
 use Illuminate\Support\Facades\Route;
 
 // Public routes
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/petugas/login', [AuthController::class, 'petugasLogin']);
+
+// Public Emergency - No authentication required (rate limited)
+Route::post('/public/emergency', [PublicEmergencyController::class, 'store'])
+    ->middleware('throttle:5,1'); // 5 requests per minute per IP
 
 // Protected routes for citizens
 Route::middleware('auth:sanctum')->group(function () {
@@ -35,6 +40,10 @@ Route::middleware(['auth:sanctum', 'role:PETUGAS'])->prefix('petugas')->group(fu
     Route::get('/profile', [PetugasController::class, 'profile']);
     Route::put('/profile', [PetugasController::class, 'updateProfile']);
 
+    // Device & Notification Management
+    Route::post('/device-token', [PetugasController::class, 'registerDeviceToken']);
+    Route::get('/check-updates', [PetugasController::class, 'checkUpdates']);
+
     // Duty Status
     Route::post('/duty/start', [PetugasController::class, 'startDuty']);
     Route::post('/duty/end', [PetugasController::class, 'endDuty']);
@@ -49,6 +58,13 @@ Route::middleware(['auth:sanctum', 'role:PETUGAS'])->prefix('petugas')->group(fu
     Route::get('/cases/{case}', [PetugasController::class, 'getCaseDetail']);
     Route::post('/cases/{case}/status', [PetugasController::class, 'updateCaseStatus']);
     Route::post('/cases/{case}/note', [PetugasController::class, 'addCaseNote']);
+
+    // Polling for updates (no database changes needed)
+    Route::get('/check-updates', [PetugasController::class, 'checkUpdates']);
+
+    // What3Words API
+    Route::get('/what3words/{lat}/{lon}', [PetugasController::class, 'getWhat3Words']);
+    Route::post('/what3words/coordinates', [PetugasController::class, 'getCoordinatesFromWhat3Words']);
 
     // Communication
     Route::get('/cases/{case}/family-contacts', [PetugasController::class, 'getFamilyContacts']);
