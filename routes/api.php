@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Route;
 // Public routes
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
+Route::post('/petugas/login', [AuthController::class, 'petugasLogin']);
 
 // Protected routes for citizens
 Route::middleware('auth:sanctum')->group(function () {
