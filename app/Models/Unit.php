@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Unit extends Model
 {
@@ -14,6 +15,7 @@ class Unit extends Model
         'last_lat',
         'last_lon',
         'last_seen_at',
+        'pimpinan_id',
     ];
 
     protected $casts = [
@@ -37,6 +39,22 @@ class Unit extends Model
     public function dispatches(): HasMany
     {
         return $this->hasMany(Dispatch::class);
+    }
+
+    /**
+     * Get the pimpinan (leader) of this unit
+     */
+    public function pimpinan(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'pimpinan_id');
+    }
+
+    /**
+     * Get the case dispatches for this unit
+     */
+    public function caseDispatches(): HasMany
+    {
+        return $this->hasMany(CaseDispatch::class);
     }
 
     // Scopes

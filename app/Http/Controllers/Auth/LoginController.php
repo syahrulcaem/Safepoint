@@ -35,6 +35,16 @@ class LoginController extends Controller
             }
 
             $request->session()->regenerate();
+            
+            // Redirect based on user role
+            if ($user->role === 'PIMPINAN') {
+                return redirect()->intended(route('pimpinan.dashboard'));
+            }
+            
+            if ($user->role === 'PETUGAS') {
+                return redirect()->intended(route('petugas.dashboard'));
+            }
+            
             return redirect()->intended('/');
         }
 

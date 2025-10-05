@@ -31,9 +31,6 @@ class User extends Authenticatable
         'last_latitude',
         'last_longitude',
         'last_location_update',
-        'duty_status',
-        'duty_started_at',
-        'last_activity_at',
     ];
 
     /**
@@ -57,8 +54,6 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'last_location_update' => 'datetime',
-            'duty_started_at' => 'datetime',
-            'last_activity_at' => 'datetime',
             'last_latitude' => 'decimal:8',
             'last_longitude' => 'decimal:8',
         ];
@@ -88,6 +83,30 @@ class User extends Authenticatable
     public function caseEvents(): HasMany
     {
         return $this->hasMany(CaseEvent::class, 'actor_id');
+    }
+
+    /**
+     * Get the case dispatches where this user is the dispatcher (operator)
+     */
+    public function dispatchesAsDispatcher(): HasMany
+    {
+        return $this->hasMany(CaseDispatch::class, 'dispatcher_id');
+    }
+
+    /**
+     * Get the case dispatches where this user is the assigned petugas
+     */
+    public function dispatchesAsPetugas(): HasMany
+    {
+        return $this->hasMany(CaseDispatch::class, 'assigned_petugas_id');
+    }
+
+    /**
+     * Get the unit where this user is the pimpinan
+     */
+    public function unitAsPimpinan(): HasOne
+    {
+        return $this->hasOne(Unit::class, 'pimpinan_id');
     }
 
     // Helper methods

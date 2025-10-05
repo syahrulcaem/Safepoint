@@ -38,8 +38,8 @@ class SampleCaseSeeder extends Seeder
         CaseEvent::create([
             'case_id' => $case1->id,
             'actor_type' => 'SYSTEM',
-            'event' => 'CASE_CREATED',
-            'meta' => ['source' => 'mobile_app'],
+            'action' => 'CASE_CREATED',
+            'metadata' => ['source' => 'mobile_app'],
         ]);
 
         // Sample case 2 - Dispatched case
@@ -55,15 +55,14 @@ class SampleCaseSeeder extends Seeder
             'category' => 'KEBAKARAN',
             'status' => 'DISPATCHED',
             'assigned_unit_id' => $units->where('type', 'DAMKAR')->first()?->id,
-            'verified_at' => now()->subMinutes(30),
             'dispatched_at' => now()->subMinutes(20),
         ]);
 
         CaseEvent::create([
             'case_id' => $case2->id,
             'actor_type' => 'SYSTEM',
-            'event' => 'CASE_CREATED',
-            'meta' => ['source' => 'web_report'],
+            'action' => 'CASE_CREATED',
+            'metadata' => ['source' => 'web_report'],
             'created_at' => now()->subMinutes(30),
         ]);
 
@@ -71,17 +70,8 @@ class SampleCaseSeeder extends Seeder
             'case_id' => $case2->id,
             'actor_type' => 'OPERATOR',
             'actor_id' => $operators->first()?->id,
-            'event' => 'VERIFIED',
-            'meta' => ['verified_by' => $operators->first()?->name],
-            'created_at' => now()->subMinutes(25),
-        ]);
-
-        CaseEvent::create([
-            'case_id' => $case2->id,
-            'actor_type' => 'OPERATOR',
-            'actor_id' => $operators->first()?->id,
-            'event' => 'DISPATCHED',
-            'meta' => [
+            'action' => 'DISPATCHED',
+            'metadata' => [
                 'unit_name' => $units->where('type', 'DAMKAR')->first()?->name,
                 'unit_type' => 'DAMKAR',
             ],
@@ -101,7 +91,6 @@ class SampleCaseSeeder extends Seeder
             'category' => 'KEAMANAN',
             'status' => 'CLOSED',
             'assigned_unit_id' => $units->where('type', 'POLISI')->first()?->id,
-            'verified_at' => now()->subHours(2),
             'dispatched_at' => now()->subHours(1)->subMinutes(45),
             'on_scene_at' => now()->subHours(1)->subMinutes(30),
             'closed_at' => now()->subHour(),
@@ -110,8 +99,8 @@ class SampleCaseSeeder extends Seeder
         CaseEvent::create([
             'case_id' => $case3->id,
             'actor_type' => 'WARGA',
-            'event' => 'CASE_CREATED',
-            'meta' => ['source' => 'panic_button'],
+            'action' => 'CASE_CREATED',
+            'metadata' => ['source' => 'panic_button'],
             'created_at' => now()->subHours(2),
         ]);
 
@@ -119,17 +108,8 @@ class SampleCaseSeeder extends Seeder
             'case_id' => $case3->id,
             'actor_type' => 'OPERATOR',
             'actor_id' => $operators->first()?->id,
-            'event' => 'VERIFIED',
-            'meta' => ['verified_by' => $operators->first()?->name],
-            'created_at' => now()->subHours(1)->subMinutes(50),
-        ]);
-
-        CaseEvent::create([
-            'case_id' => $case3->id,
-            'actor_type' => 'OPERATOR',
-            'actor_id' => $operators->first()?->id,
-            'event' => 'DISPATCHED',
-            'meta' => [
+            'action' => 'DISPATCHED',
+            'metadata' => [
                 'unit_name' => $units->where('type', 'POLISI')->first()?->name,
                 'unit_type' => 'POLISI',
             ],
@@ -139,8 +119,8 @@ class SampleCaseSeeder extends Seeder
         CaseEvent::create([
             'case_id' => $case3->id,
             'actor_type' => 'PETUGAS',
-            'event' => 'ON_SCENE',
-            'meta' => ['arrived_at' => now()->subHours(1)->subMinutes(30)->toISOString()],
+            'action' => 'ON_SCENE',
+            'metadata' => ['arrived_at' => now()->subHours(1)->subMinutes(30)->toISOString()],
             'created_at' => now()->subHours(1)->subMinutes(30),
         ]);
 
@@ -148,8 +128,8 @@ class SampleCaseSeeder extends Seeder
             'case_id' => $case3->id,
             'actor_type' => 'OPERATOR',
             'actor_id' => $operators->first()?->id,
-            'event' => 'CLOSED',
-            'meta' => ['closed_by' => $operators->first()?->name],
+            'action' => 'CLOSED',
+            'metadata' => ['closed_by' => $operators->first()?->name],
             'created_at' => now()->subHour(),
         ]);
     }

@@ -14,11 +14,12 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         $this->call([
-            UnitSeeder::class,
             AdminSeeder::class,
+            UnitsSeeder::class, // Create units with pimpinan and petugas
             CitizenProfileSeeder::class,
             SampleCaseSeeder::class,
             CasesSeeder::class,
+            LocationSeeder::class, // Add location data to petugas
         ]);
     }
 }

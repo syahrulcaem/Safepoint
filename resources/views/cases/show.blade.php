@@ -454,71 +454,41 @@
                     </div>
                     <div class="px-6 py-4 space-y-4">
                         @if ($case->status === 'NEW')
-                            <!-- Verify Case -->
-                            <form method="POST" action="{{ route('cases.verify', $case) }}">
-                                @csrf
-                                <button type="submit"
-                                    class="w-full bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
-                                    onclick="return confirm('Apakah Anda yakin ingin memverifikasi kasus ini?')">
-                                    <svg class="w-4 h-4 inline mr-2" fill="none" stroke="currentColor"
-                                        viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                                    </svg>
-                                    Verifikasi Laporan
-                                </button>
-                            </form>
-                        @endif
-
-                        @if (in_array($case->status, ['NEW', 'VERIFIED']))
-                            <!-- Dispatch to Unit -->
+                            <!-- Dispatch to Multiple Units -->
                             <div>
-                                <form method="POST" action="{{ route('cases.dispatch', $case) }}" class="space-y-3"
-                                    id="dispatch-form">
+                                <form method="POST" action="{{ route('cases.dispatch-multi', $case) }}"
+                                    class="space-y-3" id="dispatch-form">
                                     @csrf
                                     <div>
-                                        <label for="unit_id" class="block text-sm font-medium text-gray-700">Unit</label>
-                                        <select name="unit_id" id="unit_id" required
-                                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm">
-                                            <option value="">Pilih Unit</option>
-                                            @foreach ($units as $unit)
-                                                <option value="{{ $unit->id }}">{{ $unit->name }}
-                                                    ({{ $unit->type }})
-                                                </option>
-                                            @endforeach
-                                        </select>
-                                    </div>
-
-                                    <div id="petugas-container" style="display: none;">
-                                        <label for="petugas_id" class="block text-sm font-medium text-gray-700">
-                                            Petugas (Opsional)
-                                            <span class="text-xs text-gray-500 ml-1">- Pilih petugas spesifik atau biarkan
-                                                kosong</span>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                                            Pilih Unit (Dapat memilih lebih dari satu)
                                         </label>
-                                        <select name="petugas_id" id="petugas_id"
-                                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm">
-                                            <option value="">Pilih Petugas (Opsional)</option>
-                                        </select>
-                                        <div id="petugas-loading" class="mt-2 text-sm text-gray-500"
-                                            style="display: none;">
-                                            <svg class="animate-spin h-4 w-4 inline mr-2" fill="none"
-                                                viewBox="0 0 24 24">
-                                                <circle class="opacity-25" cx="12" cy="12" r="10"
-                                                    stroke="currentColor" stroke-width="4"></circle>
-                                                <path class="opacity-75" fill="currentColor"
-                                                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
-                                                </path>
-                                            </svg>
-                                            Memuat daftar petugas...
+                                        <div
+                                            class="space-y-2 max-h-64 overflow-y-auto border border-gray-300 rounded-md p-3">
+                                            @foreach ($units as $unit)
+                                                <label
+                                                    class="flex items-center space-x-3 p-2 hover:bg-gray-50 rounded cursor-pointer">
+                                                    <input type="checkbox" name="unit_ids[]" value="{{ $unit->id }}"
+                                                        class="h-4 w-4 text-red-600 focus:ring-red-500 border-gray-300 rounded">
+                                                    <span class="text-sm text-gray-900">
+                                                        {{ $unit->name }} <span
+                                                            class="text-gray-500">({{ $unit->type }})</span>
+                                                    </span>
+                                                </label>
+                                            @endforeach
                                         </div>
+                                        <p class="mt-1 text-xs text-gray-500">
+                                            Setiap unit akan menerima notifikasi dispatch. Pimpinan unit akan menugaskan
+                                            petugas.
+                                        </p>
                                     </div>
 
                                     <div>
-                                        <label for="notes"
-                                            class="block text-sm font-medium text-gray-700">Catatan</label>
+                                        <label for="notes" class="block text-sm font-medium text-gray-700">Catatan
+                                            untuk Pimpinan Unit</label>
                                         <textarea name="notes" id="notes" rows="3"
                                             class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm"
-                                            placeholder="Catatan untuk petugas..."></textarea>
+                                            placeholder="Catatan untuk pimpinan unit..."></textarea>
                                     </div>
 
                                     <button type="submit"
@@ -528,7 +498,7 @@
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                                 d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path>
                                         </svg>
-                                        Kirim ke Unit
+                                        Kirim ke Unit Terpilih
                                     </button>
                                 </form>
                             </div>
@@ -657,76 +627,15 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            const unitSelect = document.getElementById('unit_id');
-            const petugasContainer = document.getElementById('petugas-container');
-            const petugasSelect = document.getElementById('petugas_id');
-            const petugasLoading = document.getElementById('petugas-loading');
-
-            if (unitSelect) {
-                unitSelect.addEventListener('change', function() {
-                    const unitId = this.value;
-
-                    if (unitId) {
-                        // Show container and loading
-                        petugasContainer.style.display = 'block';
-                        petugasLoading.style.display = 'block';
-                        petugasSelect.innerHTML = '<option value="">Pilih Petugas (Opsional)</option>';
-                        petugasSelect.disabled = true;
-
-                        // Fetch petugas for selected unit
-                        console.log('Fetching petugas for unit ID:', unitId);
-                        fetch(`{{ url('/api/units') }}/${unitId}/petugas`, {
-                                method: 'GET',
-                                headers: {
-                                    'Accept': 'application/json',
-                                    'X-Requested-With': 'XMLHttpRequest',
-                                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')
-                                        .getAttribute('content')
-                                }
-                            })
-                            .then(response => {
-                                console.log('Response status:', response.status);
-                                console.log('Response OK:', response.ok);
-                                if (!response.ok) {
-                                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-                                }
-                                return response.json();
-                            })
-                            .then(data => {
-                                console.log('Response data:', data);
-                                petugasLoading.style.display = 'none';
-
-                                if (data.success && data.data.length > 0) {
-                                    // Add petugas options
-                                    data.data.forEach(petugas => {
-                                        const option = document.createElement('option');
-                                        option.value = petugas.id;
-                                        option.textContent = petugas.name;
-                                        petugasSelect.appendChild(option);
-                                    });
-
-                                    petugasSelect.disabled = false;
-                                } else {
-                                    petugasSelect.innerHTML =
-                                        '<option value="">Tidak ada petugas tersedia</option>';
-                                    petugasSelect.disabled = true;
-                                }
-                            })
-                            .catch(error => {
-                                console.error('Fetch error:', error);
-                                console.error('Error details:', error.message);
-                                petugasLoading.style.display = 'none';
-                                petugasSelect.innerHTML =
-                                    '<option value="">Error memuat petugas</option>';
-                                petugasSelect.disabled = true;
-
-                                // Show more detailed error info
-                                alert('Error memuat petugas: ' + error.message);
-                            });
-                    } else {
-                        // Hide petugas container if no unit selected
-                        petugasContainer.style.display = 'none';
-                        petugasSelect.innerHTML = '<option value="">Pilih Petugas (Opsional)</option>';
+            // Form validation for multi-unit dispatch
+            const dispatchForm = document.getElementById('dispatch-form');
+            if (dispatchForm) {
+                dispatchForm.addEventListener('submit', function(e) {
+                    const checkboxes = dispatchForm.querySelectorAll('input[name="unit_ids[]"]:checked');
+                    if (checkboxes.length === 0) {
+                        e.preventDefault();
+                        alert('Silakan pilih minimal satu unit untuk dispatch.');
+                        return false;
                     }
                 });
             }

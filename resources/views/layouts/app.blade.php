@@ -1017,6 +1017,8 @@
             z-index: 10;
         }
     </style>
+
+    @stack('styles')
 </head>
 
 <body class="easyPrint">

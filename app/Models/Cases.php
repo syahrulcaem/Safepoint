@@ -30,7 +30,6 @@ class Cases extends Model
         'assigned_unit_id',
         'assigned_petugas_id',
         'contacts_snapshot',
-        'verified_at',
         'dispatched_at',
         'on_scene_at',
         'closed_at',
@@ -38,7 +37,6 @@ class Cases extends Model
 
     protected $casts = [
         'contacts_snapshot' => 'array',
-        'verified_at' => 'datetime',
         'dispatched_at' => 'datetime',
         'on_scene_at' => 'datetime',
         'closed_at' => 'datetime',
@@ -122,6 +120,14 @@ class Cases extends Model
     public function dispatches(): HasMany
     {
         return $this->hasMany(Dispatch::class, 'case_id');
+    }
+
+    /**
+     * Get the case dispatches (multi-unit dispatch records)
+     */
+    public function caseDispatches(): HasMany
+    {
+        return $this->hasMany(CaseDispatch::class, 'case_id');
     }
 
     // Scopes

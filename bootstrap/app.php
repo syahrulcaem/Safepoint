@@ -15,6 +15,8 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'web.role' => \App\Http\Middleware\EnsureWebRole::class,
             'role' => \App\Http\Middleware\RoleMiddleware::class,
+            'pimpinan' => \App\Http\Middleware\EnsurePimpinanRole::class,
+            'operator' => \App\Http\Middleware\EnsureOperatorRole::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Cases;
+use App\Models\CaseDispatch;
 use App\Models\Unit;
 use App\Models\User;
 use App\Models\CaseEvent;
@@ -113,7 +114,7 @@ class CaseController extends Controller
         // If this is an AJAX request, return JSON with HTML content
         if ($request->ajax() || $request->wantsJson()) {
             $html = view('cases.show-modal', compact('case', 'units', 'googleMapsUrl'))->render();
-            
+
             return response()->json([
                 'success' => true,
                 'html' => $html
@@ -168,94 +169,61 @@ class CaseController extends Controller
         ]);
     }
 
-    public function verify(Cases $case)
-    {
-        if ($case->status !== 'NEW') {
-            return back()->with('error', 'Hanya kasus dengan status BARU yang dapat diverifikasi.');
-        }
-
-        $case->update([
-            'status' => 'VERIFIED',
-            'verified_at' => now()
-        ]);
-
-        // Create case event
-        CaseEvent::create([
-            'case_id' => $case->id,
-            'actor_id' => Auth::id(),
-            'action' => 'VERIFIED',
-            'notes' => 'Kasus telah diverifikasi oleh operator',
-            'metadata' => [
-                'previous_status' => 'NEW',
-                'new_status' => 'VERIFIED'
-            ]
-        ]);
-
-        return back()->with('success', 'Kasus berhasil diverifikasi.');
-    }
-
-    public function dispatch(Request $request, Cases $case)
+    /**
+     * Dispatch case to multiple units
+     */
+    public function dispatchMulti(Request $request, Cases $case)
     {
         $request->validate([
-            'unit_id' => 'required|exists:units,id',
-            'petugas_id' => 'nullable|exists:users,id',
+            'unit_ids' => 'required|array|min:1',
+            'unit_ids.*' => 'exists:units,id',
             'notes' => 'nullable|string|max:500'
         ]);
 
-        if (!in_array($case->status, ['VERIFIED', 'NEW'])) {
-            return back()->with('error', 'Kasus tidak dapat dikirim dalam status saat ini.');
+        if ($case->status !== 'NEW') {
+            return back()->with('error', 'Hanya kasus dengan status BARU yang dapat dikirim.');
         }
 
-        $unit = Unit::findOrFail($request->unit_id);
-        $petugas = null;
+        $dispatcher = Auth::user();
+        $units = Unit::whereIn('id', $request->unit_ids)->get();
 
-        // Validasi petugas jika dipilih
-        if ($request->petugas_id) {
-            $petugas = User::where('id', $request->petugas_id)
-                ->where('role', 'PETUGAS')
-                ->where('unit_id', $request->unit_id)
-                ->first();
-
-            if (!$petugas) {
-                return back()->with('error', 'Petugas yang dipilih tidak valid atau tidak terdaftar di unit tersebut.');
-            }
+        if ($units->isEmpty()) {
+            return back()->with('error', 'Unit yang dipilih tidak valid.');
         }
 
+        // Create dispatch record for each selected unit
+        foreach ($units as $unit) {
+            CaseDispatch::create([
+                'case_id' => $case->id,
+                'unit_id' => $unit->id,
+                'dispatcher_id' => $dispatcher->id,
+                'notes' => $request->notes,
+                'dispatched_at' => now(),
+            ]);
+        }
+
+        // Update case status (but don't set dispatched_at yet - that's when pimpinan assigns petugas)
         $case->update([
             'status' => 'DISPATCHED',
-            'assigned_unit_id' => $unit->id,
-            'assigned_petugas_id' => $petugas ? $petugas->id : null,
-            'dispatched_at' => now()
         ]);
 
         // Create case event
-        $eventNotes = $request->notes ?: "Dikirim ke unit {$unit->name}";
-        if ($petugas) {
-            $eventNotes .= " (Petugas: {$petugas->name})";
-        }
-
+        $unitNames = $units->pluck('name')->join(', ');
         CaseEvent::create([
             'case_id' => $case->id,
             'actor_id' => Auth::id(),
             'action' => 'DISPATCHED',
-            'notes' => $eventNotes,
+            'notes' => $request->notes ?: "Dikirim ke unit: {$unitNames}",
             'metadata' => [
-                'unit_id' => $unit->id,
-                'unit_name' => $unit->name,
-                'unit_type' => $unit->type,
-                'petugas_id' => $petugas ? $petugas->id : null,
-                'petugas_name' => $petugas ? $petugas->name : null,
-                'previous_status' => $case->getOriginal('status'),
+                'unit_ids' => $request->unit_ids,
+                'unit_names' => $unitNames,
+                'dispatch_count' => count($request->unit_ids),
+                'previous_status' => 'NEW',
                 'new_status' => 'DISPATCHED'
             ]
         ]);
 
-        $successMessage = "Kasus berhasil dikirim ke unit {$unit->name}";
-        if ($petugas) {
-            $successMessage .= " (Petugas: {$petugas->name})";
-        }
-
-        return back()->with('success', $successMessage);
+        return back()->with('success', "Kasus berhasil dikirim ke " . count($units) . " unit: {$unitNames}");
     }
 
     /**
@@ -413,22 +381,22 @@ class CaseController extends Controller
     {
         $limit = $request->get('limit', 10);
         $user = Auth::user();
-        
+
         $query = Cases::query()->with(['reporterUser', 'assignedUnit', 'assignedPetugas']);
-        
+
         // For PETUGAS role - only show cases assigned to their unit
         if ($user->role === 'PETUGAS') {
             $query->where('assigned_unit_id', $user->unit_id);
         }
-        
+
         $recentCases = $query->orderBy('created_at', 'desc')
             ->take($limit)
             ->get();
-        
+
         // Get unread count (cases newer than last login or last 24 hours)
         $lastNotificationCheck = session('last_notification_check', now()->subDay());
         $unreadCount = Cases::where('created_at', '>', $lastNotificationCheck)->count();
-        
+
         return response()->json([
             'success' => true,
             'notifications' => $recentCases->map(function ($case) use ($lastNotificationCheck) {
@@ -456,16 +424,16 @@ class CaseController extends Controller
     {
         $user = Auth::user();
         $lastNotificationCheck = session('last_notification_check', now()->subDay());
-        
+
         $query = Cases::query();
-        
+
         // For PETUGAS role - only show cases assigned to their unit
         if ($user->role === 'PETUGAS') {
             $query->where('assigned_unit_id', $user->unit_id);
         }
-        
+
         $unreadCount = $query->where('created_at', '>', $lastNotificationCheck)->count();
-        
+
         return response()->json([
             'success' => true,
             'count' => $unreadCount
@@ -479,13 +447,13 @@ class CaseController extends Controller
     {
         // Store last notification check time in session
         session(['last_notification_check' => now()]);
-        
+
         return response()->json([
             'success' => true,
             'message' => 'All notifications marked as read'
         ]);
     }
-    
+
     /**
      * Mark a notification (case) as read
      */
@@ -493,7 +461,7 @@ class CaseController extends Controller
     {
         $user = Auth::user();
         $case = Cases::findOrFail($id);
-        
+
         // Check if user is authorized to view this case
         if ($user->role === 'PETUGAS' && $case->assigned_unit_id != $user->unit_id) {
             return response()->json([
@@ -501,10 +469,10 @@ class CaseController extends Controller
                 'message' => 'You are not authorized to view this case'
             ], 403);
         }
-        
+
         // Store last notification check time in session
         session(['last_notification_check' => now()]);
-        
+
         return response()->json([
             'success' => true,
             'message' => 'Notification marked as read'
