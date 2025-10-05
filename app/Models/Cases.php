@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Services\NotificationService;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -54,24 +55,39 @@ class Cases extends Model
                 $model->id = Str::ulid();
             }
         });
+    }
 
+    protected static function booted()
+    {
         static::created(function ($model) {
-            // Trigger notification for new case
-            $notificationService = app(\App\Services\NotificationService::class);
-            $notificationService->createNewCaseNotification($model);
+            // Track case creation as an event
+            CaseEvent::create([
+                'case_id' => $model->id,
+                'action' => 'CREATED',
+                'metadata' => [
+                    'category' => $model->category ?? 'N/A',
+                    'status' => $model->status,
+                ]
+            ]);
+
+            // Send notification about new case
+            app(NotificationService::class)->createNewCaseNotification($model);
         });
 
-        static::updating(function ($model) {
-            // Check if status is being updated
+        static::updated(function ($model) {
+            // If status changed, track it
             if ($model->isDirty('status')) {
-                $oldStatus = $model->getOriginal('status');
-                $newStatus = $model->status;
-                
-                // Schedule notification after update is complete
-                static::updated(function ($updatedModel) use ($oldStatus, $newStatus) {
-                    $notificationService = app(\App\Services\NotificationService::class);
-                    $notificationService->createCaseUpdateNotification($updatedModel, $oldStatus, $newStatus);
-                });
+                CaseEvent::create([
+                    'case_id' => $model->id,
+                    'action' => 'STATUS_CHANGED',
+                    'metadata' => [
+                        'old_status' => $model->getOriginal('status'),
+                        'new_status' => $model->status,
+                    ]
+                ]);
+
+                // Send notification about status change
+                app(NotificationService::class)->createCaseStatusUpdateNotification($model);
             }
         });
     }
