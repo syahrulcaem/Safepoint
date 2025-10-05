@@ -20,20 +20,20 @@ class LocationSeeder extends Seeder
             ['lat' => -6.2297, 'lon' => 106.8219],
             ['lat' => -6.1862, 'lon' => 106.8063],
             ['lat' => -6.2114, 'lon' => 106.8446],
-            
+
             // South Jakarta area
             ['lat' => -6.2615, 'lon' => 106.7810],
             ['lat' => -6.2659, 'lon' => 106.8106],
             ['lat' => -6.3014, 'lon' => 106.8130],
-            
+
             // North Jakarta area
             ['lat' => -6.1381, 'lon' => 106.8631],
             ['lat' => -6.1164, 'lon' => 106.8990],
-            
+
             // East Jakarta area
             ['lat' => -6.2250, 'lon' => 106.9004],
             ['lat' => -6.2741, 'lon' => 106.8996],
-            
+
             // West Jakarta area
             ['lat' => -6.1683, 'lon' => 106.7598],
             ['lat' => -6.2001, 'lon' => 106.7631],
@@ -53,11 +53,11 @@ class LocationSeeder extends Seeder
         foreach ($petugasList as $index => $petugas) {
             // Use modulo to cycle through locations if more petugas than locations
             $location = $locations[$index % count($locations)];
-            
+
             // Add some randomness (within ~500 meters)
             $latOffset = (rand(-50, 50) / 10000); // ~500m
             $lonOffset = (rand(-50, 50) / 10000); // ~500m
-            
+
             $petugas->update([
                 'last_latitude' => $location['lat'] + $latOffset,
                 'last_longitude' => $location['lon'] + $lonOffset,

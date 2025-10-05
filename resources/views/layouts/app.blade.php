@@ -9,8 +9,9 @@
     <title>{{ isset($title) ? $title . ' - ' : '' }}SafePoint Admin</title>
 
     <!-- Vector Map CSS -->
-    <link href="{{ asset('assets/libs/admin-resources/jquery.vectormap/jquery-jvectormap-1.2.2.css') }}" rel="stylesheet" type="text/css" />
-    
+    <link href="{{ asset('assets/libs/admin-resources/jquery.vectormap/jquery-jvectormap-1.2.2.css') }}" rel="stylesheet"
+        type="text/css" />
+
     <!-- preloader css -->
     <link rel="stylesheet" href="{{ asset('assets/css/preloader.min.css') }}" type="text/css" />
 
@@ -21,7 +22,7 @@
     <!-- App Css-->
     <link href="{{ asset('assets/css/app.min.css') }}" id="app-style" rel="stylesheet" type="text/css" />
     <link href="{{ asset('assets/libs/sweetalert2/sweetalert2.min.css') }}" rel="stylesheet" type="text/css" />
-    
+
     <!-- jQuery -->
     <script src="{{ asset('assets/libs/jquery/jquery.min.js') }}"></script>
 
@@ -52,7 +53,8 @@
     <!-- alertifyjs Css -->
     <link href="{{ asset('assets/libs/alertifyjs/build/css/alertify.min.css') }}" rel="stylesheet" type="text/css" />
     <!-- alertifyjs default themes  Css -->
-    <link href="{{ asset('assets/libs/alertifyjs/build/css/themes/default.min.css') }}" rel="stylesheet" type="text/css" />
+    <link href="{{ asset('assets/libs/alertifyjs/build/css/themes/default.min.css') }}" rel="stylesheet"
+        type="text/css" />
 
     <!-- Day.js -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/dayjs/1.11.9/dayjs.min.js"></script>
@@ -68,13 +70,18 @@
     <!-- Force override any external styles -->
     <style>
         /* Force white/clean backgrounds everywhere */
-        html, body, #layout-wrapper, .main-content, .page-content {
+        html,
+        body,
+        #layout-wrapper,
+        .main-content,
+        .page-content {
             background: #f8f9fa !important;
             background-image: none !important;
             background-color: #f8f9fa !important;
         }
-        
-        #page-topbar, .navbar-header {
+
+        #page-topbar,
+        .navbar-header {
             background: #fff !important;
             background-image: none !important;
             background-color: #fff !important;
@@ -89,14 +96,17 @@
             #page-topbar {
                 padding-left: 12px;
             }
+
             #vertical-menu-btn {
                 left: 8px;
                 top: 28px;
             }
         }
-        
+
         /* Ensure no external gradients override our styles */
-        *, *::before, *::after {
+        *,
+        *::before,
+        *::after {
             background-image: none !important;
         }
     </style>
@@ -266,7 +276,7 @@
             display: flex !important;
         }
 
-        .vertical-collpsed .sidebar-header > * {
+        .vertical-collpsed .sidebar-header>* {
             flex-shrink: 0;
         }
 
@@ -405,12 +415,12 @@
         }
 
         /* Active menu styling - White theme */
-        .vertical-menu .metismenu .mm-active > a {
+        .vertical-menu .metismenu .mm-active>a {
             color: #556ee6 !important;
             background-color: rgba(85, 110, 230, 0.1) !important;
         }
 
-        .vertical-menu .metismenu .mm-active > a i {
+        .vertical-menu .metismenu .mm-active>a i {
             color: #556ee6 !important;
         }
 
@@ -433,7 +443,7 @@
             background-color: rgba(85, 110, 230, 0.05);
         }
 
-        .vertical-menu .metismenu .sub-menu .mm-active > a {
+        .vertical-menu .metismenu .sub-menu .mm-active>a {
             color: #556ee6 !important;
             background-color: rgba(85, 110, 230, 0.05) !important;
         }
@@ -495,7 +505,7 @@
             transition: transform 0.3s ease;
         }
 
-        .metismenu .mm-show > .has-arrow:after {
+        .metismenu .mm-show>.has-arrow:after {
             transform: rotate(180deg);
         }
 
@@ -583,12 +593,12 @@
             background-color: rgba(220, 53, 69, 0.1);
         }
 
-        .vertical-menu .metismenu .mm-active > a {
+        .vertical-menu .metismenu .mm-active>a {
             color: #dc3545 !important;
             background-color: rgba(220, 53, 69, 0.1) !important;
         }
 
-        .vertical-menu .metismenu .mm-active > a i {
+        .vertical-menu .metismenu .mm-active>a i {
             color: #dc3545 !important;
         }
 
@@ -597,7 +607,7 @@
             background-color: rgba(220, 53, 69, 0.05);
         }
 
-        .vertical-menu .metismenu .sub-menu .mm-active > a {
+        .vertical-menu .metismenu .sub-menu .mm-active>a {
             color: #dc3545 !important;
             background-color: rgba(220, 53, 69, 0.05) !important;
         }
@@ -676,31 +686,31 @@
                 transform: translateX(-100%);
                 transition: transform 0.3s ease;
             }
-            
+
             .main-content {
                 margin-left: 0;
             }
-            
+
             #page-topbar {
                 left: 0;
             }
-            
+
             .sidebar-enable .vertical-menu {
                 transform: translateX(0);
             }
-            
+
             .vertical-collpsed .vertical-menu {
                 transform: translateX(-100%);
             }
-            
+
             .vertical-collpsed.sidebar-enable .vertical-menu {
                 transform: translateX(0);
             }
 
             /* Mobile sidebar header */
             .sidebar-header {
-                    padding: 20px;
-                    justify-content: flex-start;
+                padding: 20px;
+                justify-content: flex-start;
                 min-height: 80px;
             }
 
@@ -712,20 +722,22 @@
                 max-height: 40px;
             }
 
-        /* Pin the sidebar toggle button to the very left of the topbar */
-        #page-topbar .navbar-header {
-            position: relative; /* create a containing block for absolute-positioned toggle */
-        }
+            /* Pin the sidebar toggle button to the very left of the topbar */
+            #page-topbar .navbar-header {
+                position: relative;
+                /* create a containing block for absolute-positioned toggle */
+            }
 
-        /* Pin the sidebar toggle visually at the very left of the viewport */
-        #vertical-menu-btn {
-            position: fixed !important;
-            left: 12px !important;
-            top: 35px !important; /* vertically center inside 70px topbar */
-            margin: 0 !important;
-            padding: 8px 10px !important;
-            z-index: 2000 !important;
-        }
+            /* Pin the sidebar toggle visually at the very left of the viewport */
+            #vertical-menu-btn {
+                position: fixed !important;
+                left: 12px !important;
+                top: 35px !important;
+                /* vertically center inside 70px topbar */
+                margin: 0 !important;
+                padding: 8px 10px !important;
+                z-index: 2000 !important;
+            }
 
             /* Collapsed state - logo centered */
             .vertical-collpsed .sidebar-header {
@@ -755,12 +767,12 @@
             .app-search {
                 display: none !important;
             }
-            
+
             .page-content {
                 padding: 20px 10px;
                 padding-top: 90px;
             }
-            
+
             .navbar-header {
                 padding: 0 15px;
             }
@@ -777,14 +789,16 @@
             .container-fluid {
                 padding: 0 15px;
             }
-        }        /* Sidebar overlay for mobile */
+        }
+
+        /* Sidebar overlay for mobile */
         .sidebar-overlay {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background-color: rgba(0,0,0,0.5);
+            background-color: rgba(0, 0, 0, 0.5);
             z-index: 1000;
             display: none;
         }
@@ -850,7 +864,9 @@
             background-image: none !important;
         }
 
-        .main-content, .page-content, .container-fluid {
+        .main-content,
+        .page-content,
+        .container-fluid {
             background: #f8f9fa !important;
             background-image: none !important;
             background-color: #f8f9fa !important;
@@ -903,6 +919,7 @@
                 height: auto;
                 padding: 12px 0;
             }
+
             .page-content {
                 padding-bottom: 20px;
             }
@@ -1024,24 +1041,26 @@
 <body class="easyPrint">
     <div id="layout-wrapper">
         @include('main.partials.menu')
-        
+
         <!-- Sidebar overlay for mobile -->
         <div class="sidebar-overlay"></div>
-        
+
         <div class="main-content">
             <div class="page-content" style="background-color: #F9FAFB;">
                 <div class="container-fluid">
                     @if (session('success'))
                         <div class="alert alert-success alert-dismissible fade show" role="alert">
                             {{ session('success') }}
-                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"
+                                aria-label="Close"></button>
                         </div>
                     @endif
 
                     @if (session('error'))
                         <div class="alert alert-danger alert-dismissible fade show" role="alert">
                             {{ session('error') }}
-                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"
+                                aria-label="Close"></button>
                         </div>
                     @endif
 
@@ -1052,7 +1071,8 @@
                                     <li>{{ $error }}</li>
                                 @endforeach
                             </ul>
-                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"
+                                aria-label="Close"></button>
                         </div>
                     @endif
 
@@ -1072,8 +1092,10 @@
     <script src="{{ asset('assets/libs/apexcharts/apexcharts.min.js') }}" defer="defer"></script>
 
     <!-- Plugins js-->
-    <script src="{{ asset('assets/libs/admin-resources/jquery.vectormap/jquery-jvectormap-1.2.2.min.js') }}" defer="defer"></script>
-    <script src="{{ asset('assets/libs/admin-resources/jquery.vectormap/maps/jquery-jvectormap-world-mill-en.js') }}" defer="defer"></script>
+    <script src="{{ asset('assets/libs/admin-resources/jquery.vectormap/jquery-jvectormap-1.2.2.min.js') }}" defer="defer">
+    </script>
+    <script src="{{ asset('assets/libs/admin-resources/jquery.vectormap/maps/jquery-jvectormap-world-mill-en.js') }}"
+        defer="defer"></script>
 
     <!-- dashboard init -->
     <script src="{{ asset('assets/js/pages/dashboard.init.js') }}" defer="defer"></script>
@@ -1085,28 +1107,28 @@
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             console.log('Initializing sidebar toggle...');
-            
+
             // Sidebar toggle functionality
             const toggleBtn = document.getElementById('vertical-menu-btn');
             const body = document.body;
             const sidebar = document.querySelector('.vertical-menu');
-            
+
             console.log('Toggle button found:', toggleBtn);
             console.log('Sidebar found:', sidebar);
-            
+
             if (toggleBtn) {
                 // Remove any existing event listeners
                 toggleBtn.replaceWith(toggleBtn.cloneNode(true));
                 const newToggleBtn = document.getElementById('vertical-menu-btn');
-                
+
                 newToggleBtn.addEventListener('click', function(e) {
                     e.preventDefault();
                     e.stopPropagation();
                     console.log('Toggle button clicked');
-                    
+
                     // Force immediate toggle - no delays or hover effects
                     body.classList.toggle('vertical-collpsed');
-                    
+
                     // Force sidebar width change immediately
                     if (body.classList.contains('vertical-collpsed')) {
                         sidebar.style.width = '70px';
@@ -1115,14 +1137,14 @@
                         sidebar.style.width = '250px';
                         console.log('Sidebar expanded immediately');
                     }
-                    
+
                     // Save state to localStorage
                     const isCollapsed = body.classList.contains('vertical-collpsed');
                     localStorage.setItem('sidebar-collapsed', isCollapsed ? 'true' : 'false');
-                    
+
                     console.log('Sidebar collapsed:', isCollapsed);
                 });
-                
+
                 console.log('Event listener attached successfully');
             } else {
                 console.error('Toggle button not found!');
@@ -1181,7 +1203,7 @@
                     }
                 }
             }
-            
+
             window.addEventListener('resize', handleResize);
             handleResize(); // Call on load
         });
@@ -1200,25 +1222,25 @@
                 this.emptyElement = document.getElementById('notifications-empty');
                 this.markAllReadBtn = document.getElementById('mark-all-read-btn');
                 this.refreshBtn = document.getElementById('refresh-notifications-btn');
-                
+
                 this.init();
             }
 
             init() {
                 // Initial load
                 this.loadNotifications();
-                
+
                 // Set up polling
                 setInterval(() => {
                     this.loadNotifications();
                     this.checkForNewCases();
                 }, this.pollingInterval);
-                
+
                 // Event listeners
                 if (this.markAllReadBtn) {
                     this.markAllReadBtn.addEventListener('click', () => this.markAllAsRead());
                 }
-                
+
                 if (this.refreshBtn) {
                     this.refreshBtn.addEventListener('click', () => this.loadNotifications());
                 }
@@ -1230,7 +1252,8 @@
                         headers: {
                             'Accept': 'application/json',
                             'X-Requested-With': 'XMLHttpRequest',
-                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute(
+                                'content')
                         }
                     });
 
@@ -1273,7 +1296,7 @@
                     const readClass = notification.is_read ? 'notification-read' : 'notification-unread';
                     const iconClass = this.getNotificationIcon(notification.type);
                     const bgClass = this.getNotificationBg(notification.type);
-                    
+
                     return `
                         <div class="notification-item ${readClass}" data-id="${notification.id}">
                             <div class="d-flex p-3 border-bottom">
@@ -1298,12 +1321,12 @@
                                     </div>
                                 </div>
                                 ${!notification.is_read ? `
-                                    <div class="ms-2">
-                                        <button class="btn btn-sm btn-link text-primary" onclick="notificationSystem.markAsRead(${notification.id})">
-                                            <i class="bx bx-check"></i>
-                                        </button>
-                                    </div>
-                                ` : ''}
+                                        <div class="ms-2">
+                                            <button class="btn btn-sm btn-link text-primary" onclick="notificationSystem.markAsRead(${notification.id})">
+                                                <i class="bx bx-check"></i>
+                                            </button>
+                                        </div>
+                                    ` : ''}
                             </div>
                         </div>
                     `;
@@ -1312,19 +1335,27 @@
 
             getNotificationIcon(type) {
                 switch (type) {
-                    case 'new_case': return 'bx bx-plus-circle';
-                    case 'case_updated': return 'bx bx-edit';
-                    case 'case_assigned': return 'bx bx-user-check';
-                    default: return 'bx bx-bell';
+                    case 'new_case':
+                        return 'bx bx-plus-circle';
+                    case 'case_updated':
+                        return 'bx bx-edit';
+                    case 'case_assigned':
+                        return 'bx bx-user-check';
+                    default:
+                        return 'bx bx-bell';
                 }
             }
 
             getNotificationBg(type) {
                 switch (type) {
-                    case 'new_case': return 'bg-danger';
-                    case 'case_updated': return 'bg-warning';
-                    case 'case_assigned': return 'bg-success';
-                    default: return 'bg-primary';
+                    case 'new_case':
+                        return 'bg-danger';
+                    case 'case_updated':
+                        return 'bg-warning';
+                    case 'case_assigned':
+                        return 'bg-success';
+                    default:
+                        return 'bg-primary';
                 }
             }
 
@@ -1335,7 +1366,8 @@
                         headers: {
                             'Accept': 'application/json',
                             'X-Requested-With': 'XMLHttpRequest',
-                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute(
+                                'content')
                         }
                     });
 
@@ -1354,7 +1386,8 @@
                         headers: {
                             'Accept': 'application/json',
                             'X-Requested-With': 'XMLHttpRequest',
-                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute(
+                                'content')
                         }
                     });
 
@@ -1374,24 +1407,25 @@
                             headers: {
                                 'Accept': 'application/json',
                                 'X-Requested-With': 'XMLHttpRequest',
-                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute(
+                                    'content')
                             }
                         });
 
                         if (response.ok) {
                             const data = await response.json();
-                            
+
                             // If unread count increased significantly, refresh the page
                             if (data.unread_count > this.lastCaseCount && this.lastCaseCount > 0) {
                                 // Show notification about new cases
                                 this.showNewCaseNotification();
-                                
+
                                 // Refresh page after a short delay
                                 setTimeout(() => {
                                     window.location.reload();
                                 }, 2000);
                             }
-                            
+
                             this.lastCaseCount = data.unread_count;
                         }
                     }
@@ -1411,7 +1445,7 @@
                     notification.style.cssText = 'top: 20px; right: 20px; z-index: 9999;';
                     notification.innerHTML = 'Kasus baru masuk! Halaman akan dimuat ulang...';
                     document.body.appendChild(notification);
-                    
+
                     setTimeout(() => {
                         document.body.removeChild(notification);
                     }, 3000);
@@ -1477,9 +1511,17 @@
         }
 
         @keyframes pulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.1); }
-            100% { transform: scale(1); }
+            0% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(1.1);
+            }
+
+            100% {
+                transform: scale(1);
+            }
         }
     </style>
 

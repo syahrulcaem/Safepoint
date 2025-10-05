@@ -22,11 +22,11 @@ Route::middleware(['auth', 'web.role', 'pimpinan'])->prefix('pimpinan')->group(f
     Route::get('/dashboard', [PimpinanController::class, 'dashboard'])->name('pimpinan.dashboard');
     Route::get('/cases/{case}', [PimpinanController::class, 'showCase'])->name('pimpinan.case.show');
     Route::post('/dispatches/{dispatch}/assign', [PimpinanController::class, 'assignPetugas'])->name('pimpinan.assign');
-    
+
     // Petugas Management
     Route::get('/petugas', [PimpinanController::class, 'managePetugas'])->name('pimpinan.petugas');
     Route::post('/petugas', [PimpinanController::class, 'storePetugas'])->name('pimpinan.petugas.store');
-    
+
     // Location Tracking
     Route::get('/map', [LocationController::class, 'index'])->name('pimpinan.map');
     Route::get('/api/petugas-locations', [LocationController::class, 'getPetugasLocations'])->name('pimpinan.petugas-locations');
@@ -37,7 +37,7 @@ Route::middleware(['auth', 'web.role'])->prefix('petugas')->group(function () {
     Route::get('/dashboard', [PetugasController::class, 'dashboard'])->name('petugas.dashboard');
     Route::get('/cases/{case}', [PetugasController::class, 'showCase'])->name('petugas.case.show');
     Route::post('/cases/{case}/update-status', [PetugasController::class, 'updateStatus'])->name('petugas.update-status');
-    
+
     // Location Tracking
     Route::post('/location/update', [LocationController::class, 'updateLocation'])->name('petugas.location.update');
 });
