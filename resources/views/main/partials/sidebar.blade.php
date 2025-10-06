@@ -43,13 +43,6 @@
                             </ul>
                         </li>
 
-                        <li class="{{ request()->routeIs('map') ? 'mm-active' : '' }}">
-                            <a href="{{ route('map') }}" class="waves-effect">
-                                <i class="bx bx-map"></i>
-                                <span key="t-map">Tracking Petugas</span>
-                            </a>
-                        </li>
-
                         @if ($userRole === 'SUPERADMIN')
                             <li class="{{ request()->routeIs(['units.*', 'users.*']) ? 'mm-active' : '' }}">
                                 <a href="javascript: void(0);" class="has-arrow waves-effect">
@@ -96,13 +89,6 @@
                                 <span key="t-petugas">Kelola Petugas</span>
                             </a>
                         </li>
-
-                        <li class="{{ request()->routeIs('pimpinan.map') ? 'mm-active' : '' }}">
-                            <a href="{{ route('pimpinan.map') }}" class="waves-effect">
-                                <i class="bx bx-map"></i>
-                                <span key="t-map">Tracking Petugas</span>
-                            </a>
-                        </li>
                     @endif
 
                     {{-- PETUGAS MENU --}}
@@ -118,16 +104,6 @@
                             <a href="{{ route('petugas.dashboard') }}" class="waves-effect">
                                 <i class="bx bx-task"></i>
                                 <span key="t-tasks">Tugas Saya</span>
-                            </a>
-                        </li>
-
-                        <li>
-                            <a href="#" class="waves-effect" id="toggle-tracking">
-                                <i class="bx bx-map"></i>
-                                <span key="t-location">
-                                    <span id="tracking-status">Aktifkan Tracking</span>
-                                    <span class="badge bg-secondary font-size-10 ms-1" id="tracking-badge">OFF</span>
-                                </span>
                             </a>
                         </li>
                     @endif

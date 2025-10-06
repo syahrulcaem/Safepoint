@@ -314,82 +314,64 @@
     </div>
 @endsection
 
+
 @push('styles')
-    <!-- Leaflet CSS -->
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+    <!-- Mapbox GL JS CSS -->
+    <link href='https://api.mapbox.com/mapbox-gl-js/v3.0.1/mapbox-gl.css' rel='stylesheet' />
 @endpush
 
 @push('scripts')
-    <!-- Leaflet JS -->
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
-        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
-
+    <!-- Mapbox GL JS -->
+    <script src='https://api.mapbox.com/mapbox-gl-js/v3.0.1/mapbox-gl.js'></script>
     <script>
         @if ($case->lat && $case->lon)
+            mapboxgl.accessToken = @json(config('services.mapbox.access_token'));
             const caseLat = {{ $case->lat }};
             const caseLon = {{ $case->lon }};
-
-            // Create map centered on case location
-            const map = L.map('map').setView([caseLat, caseLon], 15);
-
-            // Add OpenStreetMap tile layer
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                maxZoom: 19,
-                attribution: '© OpenStreetMap contributors'
-            }).addTo(map);
+            const map = new mapboxgl.Map({
+                container: 'map',
+                style: 'mapbox://styles/mapbox/streets-v12',
+                center: [caseLon, caseLat],
+                zoom: 15
+            });
 
             // Add marker for case location (RED)
-            const caseMarker = L.marker([caseLat, caseLon], {
-                icon: L.icon({
-                    iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
-                    shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
-                    iconSize: [25, 41],
-                    iconAnchor: [12, 41],
-                    popupAnchor: [1, -34],
-                    shadowSize: [41, 41]
+            const caseMarker = new mapboxgl.Marker({
+                    color: 'red'
                 })
-            }).addTo(map);
-
-            caseMarker.bindPopup(`
-                <div class="text-sm">
-                    <strong>Lokasi Kejadian</strong><br>
-                    ${@json($case->locator_text ?? 'N/A')}<br>
-                    <span class="text-xs text-gray-500">${caseLat}, ${caseLon}</span>
-                </div>
-            `).openPopup();
+                .setLngLat([caseLon, caseLat])
+                .setPopup(new mapboxgl.Popup().setHTML(`
+                    <div class='text-sm'>
+                        <strong>Lokasi Kejadian</strong><br>
+                        {{ $case->locator_text ?? 'N/A' }}<br>
+                        <span class='text-xs text-gray-500'>${caseLat}, ${caseLon}</span>
+                    </div>
+                `))
+                .addTo(map);
+            caseMarker.togglePopup();
 
             @if ($dispatch && $dispatch->petugas && $dispatch->petugas->last_latitude && $dispatch->petugas->last_longitude)
-                // Add marker for assigned petugas location (BLUE)
-                const petugasLat = {{ $dispatch->petugas->last_latitude }};
-                const petugasLon = {{ $dispatch->petugas->last_longitude }};
+                let petugasLat = {{ $dispatch->petugas->last_latitude }};
+                let petugasLon = {{ $dispatch->petugas->last_longitude }};
                 const petugasName = @json($dispatch->petugas->name);
-
-                const petugasMarker = L.marker([petugasLat, petugasLon], {
-                    icon: L.icon({
-                        iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-blue.png',
-                        shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
-                        iconSize: [25, 41],
-                        iconAnchor: [12, 41],
-                        popupAnchor: [1, -34],
-                        shadowSize: [41, 41]
+                let petugasMarker = new mapboxgl.Marker({
+                        color: 'blue'
                     })
-                }).addTo(map);
-
-                petugasMarker.bindPopup(`
-                    <div class="text-sm">
-                        <strong>${petugasName}</strong><br>
-                        <span class="text-xs text-gray-500">Lokasi Petugas</span>
-                    </div>
-                `);
+                    .setLngLat([petugasLon, petugasLat])
+                    .setPopup(new mapboxgl.Popup().setHTML(`
+                        <div class='text-sm'>
+                            <strong>${petugasName}</strong><br>
+                            <span class='text-xs text-gray-500'>Lokasi Petugas</span>
+                        </div>
+                    `))
+                    .addTo(map);
 
                 // Fit map to show both markers
-                const bounds = L.latLngBounds([
-                    [caseLat, caseLon],
-                    [petugasLat, petugasLon]
-                ]);
+                const bounds = new mapboxgl.LngLatBounds();
+                bounds.extend([caseLon, caseLat]);
+                bounds.extend([petugasLon, petugasLat]);
                 map.fitBounds(bounds, {
-                    padding: [50, 50]
+                    padding: 50
                 });
 
                 // Auto-refresh petugas location every 30 seconds
@@ -398,7 +380,9 @@
                         .then(response => response.json())
                         .then(data => {
                             if (data.success && data.data.latitude && data.data.longitude) {
-                                petugasMarker.setLatLng([data.data.latitude, data.data.longitude]);
+                                petugasLat = data.data.latitude;
+                                petugasLon = data.data.longitude;
+                                petugasMarker.setLngLat([petugasLon, petugasLat]);
                             }
                         })
                         .catch(error => console.error('Error fetching petugas location:', error));
