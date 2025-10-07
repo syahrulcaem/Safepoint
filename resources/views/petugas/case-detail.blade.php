@@ -77,8 +77,32 @@
 
                             <!-- Map Display -->
                             <div>
-                                <label class="text-sm font-medium text-gray-500 block mb-2">Peta Lokasi</label>
-                                <div id="map" class="w-full h-64 rounded-lg border border-gray-300"></div>
+                                <label class="text-sm font-medium text-gray-500 block mb-2">
+                                    Peta Lokasi Kejadian
+                                    @if (in_array($case->status, ['DISPATCHED', 'ON_THE_WAY', 'ON_SCENE']))
+                                        & Rute Navigasi
+                                    @endif
+                                </label>
+                                <div class="relative">
+                                    <div id="map" class="w-full h-96 rounded-lg border border-gray-300"></div>
+                                    @if (in_array($case->status, ['DISPATCHED', 'ON_THE_WAY', 'ON_SCENE']))
+                                        <div id="distance-info" class="distance-info">
+                                            <span class="text-gray-500">Menghitung rute...</span>
+                                        </div>
+                                    @else
+                                        <div
+                                            class="absolute top-4 left-4 bg-blue-50 border border-blue-200 rounded-lg px-4 py-2 shadow-sm">
+                                            <p class="text-sm text-blue-800">
+                                                <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor"
+                                                    viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                        d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                </svg>
+                                                Rute navigasi akan muncul setelah Anda ditugaskan
+                                            </p>
+                                        </div>
+                                    @endif
+                                </div>
                             </div>
 
                             <div class="flex space-x-3">
@@ -313,54 +337,157 @@
 @endsection
 
 @push('styles')
-    <!-- Leaflet CSS -->
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+    <!-- Mapbox GL JS CSS -->
+    <link href='https://api.mapbox.com/mapbox-gl-js/v3.0.1/mapbox-gl.css' rel='stylesheet' />
+    <style>
+        .distance-info {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: white;
+            padding: 10px 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            z-index: 1;
+            font-size: 14px;
+        }
+
+        .distance-info strong {
+            color: #dc2626;
+        }
+    </style>
 @endpush
 
 @push('scripts')
-    <!-- Leaflet JS -->
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
-        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
-
+    <!-- Mapbox GL JS -->
+    <script src='https://api.mapbox.com/mapbox-gl-js/v3.0.1/mapbox-gl.js'></script>
     <script>
-        // Initialize map
         @if ($case->lat && $case->lon)
+            mapboxgl.accessToken = @json(config('services.mapbox.access_token'));
             const caseLat = {{ $case->lat }};
             const caseLon = {{ $case->lon }};
 
-            // Create map centered on case location
-            const map = L.map('map').setView([caseLat, caseLon], 15);
+            // Check if case is dispatched (petugas has been assigned)
+            const isDispatched =
+            {{ in_array($case->status, ['DISPATCHED', 'ON_THE_WAY', 'ON_SCENE']) ? 'true' : 'false' }};
 
-            // Add OpenStreetMap tile layer
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                maxZoom: 19,
-                attribution: '© OpenStreetMap contributors'
-            }).addTo(map);
+            // Get petugas location from database (only if dispatched)
+            @if (in_array($case->status, ['DISPATCHED', 'ON_THE_WAY', 'ON_SCENE']))
+                const petugasLocationData = @json($petugasLocation);
+                console.log('Petugas location data:', petugasLocationData);
+
+                @if (!empty($petugasLocation['lat']) && !empty($petugasLocation['lon']))
+                    let initialPetugasLat = {{ $petugasLocation['lat'] }};
+                    let initialPetugasLon = {{ $petugasLocation['lon'] }};
+                    let hasDatabaseLocation = true;
+                    console.log('Has database location:', initialPetugasLat, initialPetugasLon);
+                @else
+                    let initialPetugasLat = null;
+                    let initialPetugasLon = null;
+                    let hasDatabaseLocation = false;
+                    console.log('No database location found');
+                @endif
+            @else
+                let initialPetugasLat = null;
+                let initialPetugasLon = null;
+                let hasDatabaseLocation = false;
+            @endif
+
+            // Create map centered on case location (or between case and petugas if dispatched)
+            const map = new mapboxgl.Map({
+                container: 'map',
+                style: 'mapbox://styles/mapbox/streets-v12',
+                center: (isDispatched && hasDatabaseLocation) ? [(caseLon + initialPetugasLon) / 2, (caseLat +
+                    initialPetugasLat) / 2] : [caseLon, caseLat],
+                zoom: isDispatched ? 13 : 15
+            });
+
+            // Add navigation controls
+            map.addControl(new mapboxgl.NavigationControl(), 'top-right');
 
             // Add marker for case location (RED)
-            const caseMarker = L.marker([caseLat, caseLon], {
-                icon: L.icon({
-                    iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
-                    shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
-                    iconSize: [25, 41],
-                    iconAnchor: [12, 41],
-                    popupAnchor: [1, -34],
-                    shadowSize: [41, 41]
+            const caseMarker = new mapboxgl.Marker({
+                    color: 'red'
                 })
-            }).addTo(map);
+                .setLngLat([caseLon, caseLat])
+                .setPopup(new mapboxgl.Popup().setHTML(`
+                    <div class='text-sm font-medium'>
+                        <strong>Lokasi Kejadian</strong><br>
+                        {{ $case->locator_text ?? 'N/A' }}<br>
+                        <span class='text-xs text-gray-500'>${caseLat}, ${caseLon}</span>
+                    </div>
+                `))
+                .addTo(map);
 
-            caseMarker.bindPopup(`
-                <div class="text-sm">
-                    <strong>Lokasi Kejadian</strong><br>
-                    ${@json($case->locator_text ?? 'N/A')}<br>
-                    <span class="text-xs text-gray-500">${caseLat}, ${caseLon}</span>
-                </div>
-            `);
-
-            // Track petugas location and add marker (BLUE)
+            // Track petugas location
             let petugasMarker = null;
             let locationUpdateInterval = null;
+            let routeLayer = null;
+            let usingDatabaseLocation = hasDatabaseLocation;
+
+            // Function to get route from Mapbox Directions API
+            async function getRoute(startLng, startLat, endLng, endLat) {
+                const url =
+                    `https://api.mapbox.com/directions/v5/mapbox/driving/${startLng},${startLat};${endLng},${endLat}?geometries=geojson&access_token=${mapboxgl.accessToken}`;
+
+                try {
+                    const response = await fetch(url);
+                    const data = await response.json();
+
+                    if (data.routes && data.routes.length > 0) {
+                        const route = data.routes[0];
+                        const distance = (route.distance / 1000).toFixed(2); // Convert to km
+                        const duration = Math.round(route.duration / 60); // Convert to minutes
+
+                        // Remove old route layer if exists
+                        if (map.getLayer('route')) {
+                            map.removeLayer('route');
+                            map.removeSource('route');
+                        }
+
+                        // Add route layer
+                        map.addLayer({
+                            id: 'route',
+                            type: 'line',
+                            source: {
+                                type: 'geojson',
+                                data: {
+                                    type: 'Feature',
+                                    properties: {},
+                                    geometry: route.geometry
+                                }
+                            },
+                            layout: {
+                                'line-join': 'round',
+                                'line-cap': 'round'
+                            },
+                            paint: {
+                                'line-color': '#3b82f6',
+                                'line-width': 5,
+                                'line-opacity': 0.75
+                            }
+                        });
+
+                        // Update distance info
+                        document.getElementById('distance-info').innerHTML = `
+                            <strong>Jarak:</strong> ${distance} km<br>
+                            <strong>Est. Waktu:</strong> ${duration} menit
+                        `;
+
+                        // Fit map to show route
+                        const coordinates = route.geometry.coordinates;
+                        const bounds = coordinates.reduce((bounds, coord) => {
+                            return bounds.extend(coord);
+                        }, new mapboxgl.LngLatBounds(coordinates[0], coordinates[0]));
+
+                        map.fitBounds(bounds, {
+                            padding: 50
+                        });
+                    }
+                } catch (error) {
+                    console.error('Error fetching route:', error);
+                }
+            }
 
             function updatePetugasLocation() {
                 if (navigator.geolocation) {
@@ -368,29 +495,27 @@
                         function(position) {
                             const petugasLat = position.coords.latitude;
                             const petugasLon = position.coords.longitude;
+                            usingDatabaseLocation = false; // Now using real-time location
 
-                            // Update marker
+                            // Update or create marker
                             if (petugasMarker) {
-                                petugasMarker.setLatLng([petugasLat, petugasLon]);
+                                petugasMarker.setLngLat([petugasLon, petugasLat]);
                             } else {
-                                petugasMarker = L.marker([petugasLat, petugasLon], {
-                                    icon: L.icon({
-                                        iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-blue.png',
-                                        shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
-                                        iconSize: [25, 41],
-                                        iconAnchor: [12, 41],
-                                        popupAnchor: [1, -34],
-                                        shadowSize: [41, 41]
+                                petugasMarker = new mapboxgl.Marker({
+                                        color: 'blue'
                                     })
-                                }).addTo(map);
-
-                                petugasMarker.bindPopup(`
-                                    <div class="text-sm">
-                                        <strong>Lokasi Anda</strong><br>
-                                        <span class="text-xs text-gray-500">Diperbarui otomatis</span>
-                                    </div>
-                                `);
+                                    .setLngLat([petugasLon, petugasLat])
+                                    .setPopup(new mapboxgl.Popup().setHTML(`
+                                        <div class='text-sm font-medium'>
+                                            <strong>Lokasi Anda</strong><br>
+                                            <span class='text-xs text-gray-500'>Real-time GPS</span>
+                                        </div>
+                                    `))
+                                    .addTo(map);
                             }
+
+                            // Get and display route
+                            getRoute(petugasLon, petugasLat, caseLon, caseLat);
 
                             // Send location to server
                             fetch('{{ route('api.location.update') }}', {
@@ -408,20 +533,70 @@
                         },
                         function(error) {
                             console.error('Geolocation error:', error);
+
+                            // Use database location as fallback
+                            if (usingDatabaseLocation && initialPetugasLat && initialPetugasLon) {
+                                document.getElementById('distance-info').innerHTML =
+                                    '<span class="text-yellow-600">Menggunakan lokasi terakhir dari database</span>';
+                            } else {
+                                document.getElementById('distance-info').innerHTML =
+                                    '<span class="text-red-600">Tidak dapat mengakses lokasi</span>';
+                            }
                         }, {
                             enableHighAccuracy: true,
                             maximumAge: 10000,
                             timeout: 5000
                         }
                     );
+                } else {
+                    // Geolocation not supported, use database location
+                    if (usingDatabaseLocation && initialPetugasLat && initialPetugasLon) {
+                        document.getElementById('distance-info').innerHTML =
+                            '<span class="text-yellow-600">Menggunakan lokasi terakhir dari database</span>';
+                    }
                 }
             }
 
-            // Initial update
-            updatePetugasLocation();
+            // Initial update after map loads
+            map.on('load', function() {
+                // ONLY show directions and petugas marker if case is dispatched
+                if (isDispatched) {
+                    // Show initial location from database if available
+                    if (hasDatabaseLocation && initialPetugasLat !== null && initialPetugasLon !== null) {
+                        console.log('Adding database marker:', initialPetugasLat, initialPetugasLon);
+                        petugasMarker = new mapboxgl.Marker({
+                                color: 'blue'
+                            })
+                            .setLngLat([initialPetugasLon, initialPetugasLat])
+                            .setPopup(new mapboxgl.Popup().setHTML(`
+                                <div class='text-sm font-medium'>
+                                    <strong>Lokasi Anda (Database)</strong><br>
+                                    <span class='text-xs text-gray-500'>Terakhir update: {{ $petugasLocation['updated_at'] ? \Carbon\Carbon::parse($petugasLocation['updated_at'])->diffForHumans() : 'N/A' }}</span>
+                                </div>
+                            `))
+                            .addTo(map);
 
-            // Update every 30 seconds
-            locationUpdateInterval = setInterval(updatePetugasLocation, 30000);
+                        // Show initial route
+                        getRoute(initialPetugasLon, initialPetugasLat, caseLon, caseLat);
+                    } else {
+                        console.log('No database location available');
+                        const distanceInfo = document.getElementById('distance-info');
+                        if (distanceInfo) {
+                            distanceInfo.innerHTML = '<span class="text-yellow-600">Menunggu GPS...</span>';
+                        }
+                    }
+
+                    // Try to get real-time location
+                    setTimeout(updatePetugasLocation, 1000);
+                } else {
+                    console.log('Case not yet dispatched, skipping directions');
+                }
+            });
+
+            // Update every 30 seconds (only if dispatched)
+            if (isDispatched) {
+                locationUpdateInterval = setInterval(updatePetugasLocation, 30000);
+            }
 
             // Cleanup on page unload
             window.addEventListener('beforeunload', function() {

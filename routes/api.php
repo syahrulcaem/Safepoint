@@ -61,12 +61,15 @@ Route::middleware(['auth:sanctum', 'role:PETUGAS'])->prefix('petugas')->group(fu
 
     // Case Management
     Route::get('/cases/assigned', [PetugasController::class, 'getAssignedCases']);
+    Route::get('/cases/new-assignments', [PetugasController::class, 'getNewAssignments']); // NEW: Get tugas baru
     Route::get('/cases/{case}', [PetugasController::class, 'getCaseDetail']);
     Route::post('/cases/{case}/status', [PetugasController::class, 'updateCaseStatus']);
+    Route::post('/cases/{case}/close', [PetugasController::class, 'closeCase']);
     Route::post('/cases/{case}/note', [PetugasController::class, 'addCaseNote']);
 
-    // Polling for updates (no database changes needed)
-    Route::get('/check-updates', [PetugasController::class, 'checkUpdates']);
+    // Notifications
+    Route::get('/notifications/unread-count', [PetugasController::class, 'getUnreadCount']); // NEW: Get badge count
+    Route::get('/check-updates', [PetugasController::class, 'checkUpdates']); // Polling for all updates
 
     // What3Words API
     Route::get('/what3words/{lat}/{lon}', [PetugasController::class, 'getWhat3Words']);

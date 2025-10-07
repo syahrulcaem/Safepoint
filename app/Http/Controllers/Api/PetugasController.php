@@ -241,6 +241,7 @@ class PetugasController extends Controller
 
     /**
      * Get assigned cases for petugas
+     * Query from case_dispatches table (source of truth for dispatch assignments)
      */
     public function getAssignedCases(Request $request)
     {
@@ -249,17 +250,24 @@ class PetugasController extends Controller
             $perPage = $request->get('per_page', 10);
             $status = $request->get('status');
 
-            $query = Cases::with(['reporter', 'dispatches', 'lastEvent'])
+            // Start query from case_dispatches table (source of truth)
+            $dispatchQuery = DB::table('case_dispatches')
                 ->where(function ($q) use ($user) {
-                    // Cases assigned to this specific petugas
+                    // Dispatches assigned to this specific petugas
                     $q->where('assigned_petugas_id', $user->id)
-                        // OR cases assigned to this petugas's unit (but not to specific petugas)
+                        // OR dispatches assigned to this petugas's unit (but not to specific petugas)
                         ->orWhere(function ($subq) use ($user) {
-                            $subq->where('assigned_unit_id', $user->unit_id)
+                            $subq->where('unit_id', $user->unit_id)
                                 ->whereNull('assigned_petugas_id');
                         });
-                });
+                })
+                ->pluck('case_id');
 
+            // Get cases based on dispatch records
+            $query = Cases::with(['reporterUser.citizenProfile', 'dispatches.unit', 'caseEvents'])
+                ->whereIn('id', $dispatchQuery);
+
+            // Filter by case status if provided (from cases table)
             if ($status) {
                 $query->where('status', $status);
             }
@@ -295,9 +303,9 @@ class PetugasController extends Controller
             $user = $request->user();
 
             $case = Cases::with([
-                'reporter.citizenProfile',
+                'reporterUser.citizenProfile',
                 'dispatches.unit',
-                'events.actor'
+                'caseEvents.actor'
             ])->find($caseId);
 
             if (!$case) {
@@ -307,42 +315,108 @@ class PetugasController extends Controller
                 ], 404);
             }
 
-            // Check if petugas has access to this case
-            $hasAccess = ($case->assigned_petugas_id === $user->id) ||
-                ($case->assigned_unit_id === $user->unit_id && !$case->assigned_petugas_id);
+            // Check if petugas has access to this case (query case_dispatches table)
+            $hasAccess = DB::table('case_dispatches')
+                ->where('case_id', $caseId)
+                ->where(function ($q) use ($user) {
+                    $q->where('assigned_petugas_id', $user->id)
+                        ->orWhere(function ($subq) use ($user) {
+                            $subq->where('unit_id', $user->unit_id)
+                                ->whereNull('assigned_petugas_id');
+                        });
+                })
+                ->exists();
 
             if (!$hasAccess) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Akses ditolak'
                 ], 403);
-            }            // Calculate distance from petugas current location
+            }
+
+            // Calculate distance from petugas current location
             $distance = null;
-            if ($user->last_latitude && $user->last_longitude) {
+            $estimatedTime = null;
+            if ($user->last_latitude && $user->last_longitude && $case->lat && $case->lon) {
                 $distance = $this->calculateDistance(
                     $user->last_latitude,
                     $user->last_longitude,
-                    $case->latitude,
-                    $case->longitude
+                    $case->lat,
+                    $case->lon
                 );
+                // Estimate time: assume 40 km/h average speed in city
+                $estimatedTime = round(($distance / 40) * 60); // minutes
             }
 
-            // Get What3Words address
+            // Get What3Words address (3 kata lokasi)
             $what3words = null;
-            if ($case->latitude && $case->longitude) {
-                $what3words = $this->what3words->getWhat3WordsFromCoordinates(
-                    $case->latitude,
-                    $case->longitude
+            if ($case->lat && $case->lon) {
+                try {
+                    $what3words = $this->what3words->convertToWords(
+                        $case->lat,
+                        $case->lon
+                    );
+                } catch (\Exception $e) {
+                    Log::warning('What3Words API error: ' . $e->getMessage());
+                }
+            }
+
+            // Get Mapbox Directions URL (for mobile navigation)
+            $directionsUrl = null;
+            $mapboxToken = config('services.mapbox.access_token');
+            if ($user->last_latitude && $user->last_longitude && $case->lat && $case->lon && $mapboxToken) {
+                // Mapbox Directions API URL for driving route
+                $directionsUrl = sprintf(
+                    'https://api.mapbox.com/directions/v5/mapbox/driving/%s,%s;%s,%s?geometries=geojson&access_token=%s',
+                    $user->last_longitude,
+                    $user->last_latitude,
+                    $case->lon,
+                    $case->lat,
+                    $mapboxToken
                 );
             }
 
             return response()->json([
                 'success' => true,
                 'data' => [
-                    'case' => $case,
-                    'distance_km' => $distance,
-                    'what3words' => $what3words,
-                    'google_maps_url' => "https://www.google.com/maps?q={$case->latitude},{$case->longitude}"
+                    'id' => $case->id,
+                    'short_id' => $case->short_id,
+                    'category' => $case->category,
+                    'status' => $case->status,
+                    'description' => $case->description,
+                    'location' => [
+                        'address' => $case->locator_text,
+                        'latitude' => $case->lat,
+                        'longitude' => $case->lon,
+                        'accuracy' => $case->accuracy,
+                        'what3words' => $what3words // 3 kata lokasi
+                    ],
+                    'reporter' => [
+                        'name' => $case->reporterUser->name ?? 'N/A',
+                        'phone' => $case->reporterUser->phone ?? null,
+                        'email' => $case->reporterUser->email ?? null
+                    ],
+                    'navigation' => [
+                        'distance_km' => $distance ? round($distance, 2) : null,
+                        'estimated_time_minutes' => $estimatedTime,
+                        'directions_api_url' => $directionsUrl,
+                        'google_maps_url' => "https://www.google.com/maps?q={$case->lat},{$case->lon}",
+                        'petugas_location' => [
+                            'latitude' => $user->last_latitude,
+                            'longitude' => $user->last_longitude
+                        ]
+                    ],
+                    'timeline' => $case->caseEvents->map(function ($event) {
+                        return [
+                            'action' => $event->event,
+                            'description' => $event->description,
+                            'actor' => $event->actor->name ?? 'System',
+                            'created_at' => $event->created_at->format('Y-m-d H:i:s'),
+                            'created_at_human' => $event->created_at->diffForHumans()
+                        ];
+                    }),
+                    'created_at' => $case->created_at->format('Y-m-d H:i:s'),
+                    'created_at_human' => $case->created_at->diffForHumans()
                 ]
             ]);
         } catch (\Exception $e) {
@@ -356,11 +430,15 @@ class PetugasController extends Controller
 
     /**
      * Update case status
+     * Valid transitions:
+     * - DISPATCHED -> ON_THE_WAY
+     * - DISPATCHED/ON_THE_WAY -> ON_SCENE
+     * - ON_THE_WAY/ON_SCENE -> CLOSED
      */
     public function updateCaseStatus(Request $request, $caseId)
     {
         $request->validate([
-            'status' => 'required|in:ON_ROUTE,ARRIVED,IN_PROGRESS,RESOLVED,CLOSED',
+            'status' => 'required|in:ON_THE_WAY,ON_SCENE,CLOSED',
             'notes' => 'nullable|string|max:1000'
         ]);
 
@@ -375,9 +453,134 @@ class PetugasController extends Controller
                 ], 404);
             }
 
-            // Check access
-            $hasAccess = $case->dispatches()
-                ->where('unit_id', $user->unit_id)
+            // Check if petugas has access to this case (query case_dispatches table)
+            $hasAccess = DB::table('case_dispatches')
+                ->where('case_id', $caseId)
+                ->where(function ($q) use ($user) {
+                    $q->where('assigned_petugas_id', $user->id)
+                        ->orWhere(function ($subq) use ($user) {
+                            $subq->where('unit_id', $user->unit_id)
+                                ->whereNull('assigned_petugas_id');
+                        });
+                })
+                ->exists();
+
+            if (!$hasAccess) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Akses ditolak. Kasus ini tidak ditugaskan kepada Anda.'
+                ], 403);
+            }
+
+            // Validate status transition
+            $currentStatus = $case->status;
+            $newStatus = $request->status;
+
+            $validTransitions = [
+                'DISPATCHED' => ['ON_THE_WAY', 'ON_SCENE', 'CLOSED'],
+                'ON_THE_WAY' => ['ON_SCENE', 'CLOSED'],
+                'ON_SCENE' => ['CLOSED']
+            ];
+
+            if (
+                !isset($validTransitions[$currentStatus]) ||
+                !in_array($newStatus, $validTransitions[$currentStatus])
+            ) {
+                return response()->json([
+                    'success' => false,
+                    'message' => "Tidak dapat mengubah status dari {$currentStatus} ke {$newStatus}"
+                ], 422);
+            }
+
+            DB::transaction(function () use ($case, $request, $user, $currentStatus, $newStatus) {
+                // Update case status
+                $updateData = ['status' => $newStatus];
+
+                // If closing case, set closed_at timestamp
+                if ($newStatus === 'CLOSED') {
+                    $updateData['closed_at'] = now();
+                }
+
+                $case->update($updateData);
+
+                // Create case event
+                $statusLabels = [
+                    'ON_THE_WAY' => 'Dalam Perjalanan',
+                    'ON_SCENE' => 'Tiba di Lokasi',
+                    'CLOSED' => 'Selesai Ditangani'
+                ];
+
+                CaseEvent::create([
+                    'case_id' => $case->id,
+                    'actor_type' => 'PETUGAS',
+                    'actor_id' => $user->id,
+                    'action' => 'STATUS_CHANGED',
+                    'notes' => "Status diubah menjadi " . ($statusLabels[$newStatus] ?? $newStatus) .
+                        ($request->notes ? ". Catatan: {$request->notes}" : ""),
+                    'metadata' => [
+                        'old_status' => $currentStatus,
+                        'new_status' => $newStatus,
+                        'notes' => $request->notes,
+                        'petugas_location' => [
+                            'latitude' => $user->last_latitude,
+                            'longitude' => $user->last_longitude
+                        ]
+                    ]
+                ]);
+            });
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Status kasus berhasil diperbarui',
+                'data' => [
+                    'id' => $case->id,
+                    'short_id' => $case->short_id,
+                    'status' => $case->fresh()->status,
+                    'closed_at' => $case->fresh()->closed_at
+                ]
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error updating case status: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal memperbarui status kasus: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Close case (alias for updateCaseStatus with CLOSED status)
+     * Simplified endpoint for mobile app
+     */
+    public function closeCase(Request $request, $caseId)
+    {
+        $request->validate([
+            'resolution_notes' => 'required|string|max:2000',
+            'photos' => 'nullable|array',
+            'photos.*' => 'image|max:5120' // 5MB max per photo
+        ]);
+
+        try {
+            $user = $request->user();
+
+            $case = Cases::find($caseId);
+            if (!$case) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Kasus tidak ditemukan'
+                ], 404);
+            }
+
+            // Check access (query case_dispatches table)
+            $hasAccess = DB::table('case_dispatches')
+                ->where('case_id', $caseId)
+                ->where(function ($q) use ($user) {
+                    $q->where('assigned_petugas_id', $user->id)
+                        ->orWhere(function ($subq) use ($user) {
+                            $subq->where('unit_id', $user->unit_id)
+                                ->whereNull('assigned_petugas_id');
+                        });
+                })
                 ->exists();
 
             if (!$hasAccess) {
@@ -387,37 +590,55 @@ class PetugasController extends Controller
                 ], 403);
             }
 
-            DB::transaction(function () use ($case, $request, $user) {
-                // Update case status
-                $case->update(['status' => $request->status]);
+            // Validate current status
+            if (!in_array($case->status, ['DISPATCHED', 'ON_THE_WAY', 'ON_SCENE'])) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Kasus hanya dapat ditutup dari status DISPATCHED, ON_THE_WAY atau ON_SCENE'
+                ], 422);
+            }
 
-                // Create case event
+            DB::transaction(function () use ($case, $request, $user) {
+                // Update case to CLOSED
+                $case->update([
+                    'status' => 'CLOSED',
+                    'closed_at' => now()
+                ]);
+
+                // Create closure event
                 CaseEvent::create([
-                    'id' => Str::ulid(),
                     'case_id' => $case->id,
+                    'actor_type' => 'PETUGAS',
                     'actor_id' => $user->id,
-                    'event_type' => 'STATUS_CHANGE',
-                    'description' => "Status diubah menjadi {$request->status}" .
-                        ($request->notes ? " - {$request->notes}" : ""),
-                    'metadata' => json_encode([
-                        'old_status' => $case->getOriginal('status'),
-                        'new_status' => $request->status,
-                        'notes' => $request->notes,
-                        'location' => $user->getLastLocationAttribute()
-                    ])
+                    'action' => 'CASE_CLOSED',
+                    'notes' => "Kasus ditutup. {$request->resolution_notes}",
+                    'metadata' => [
+                        'resolution_notes' => $request->resolution_notes,
+                        'closed_by' => $user->name,
+                        'closed_from_mobile' => true,
+                        'petugas_location' => [
+                            'latitude' => $user->last_latitude,
+                            'longitude' => $user->last_longitude
+                        ]
+                    ]
                 ]);
             });
 
             return response()->json([
                 'success' => true,
-                'message' => 'Status kasus berhasil diperbarui',
-                'data' => $case->fresh()
+                'message' => 'Kasus berhasil ditutup',
+                'data' => [
+                    'id' => $case->id,
+                    'short_id' => $case->short_id,
+                    'status' => 'CLOSED',
+                    'closed_at' => $case->fresh()->closed_at->format('Y-m-d H:i:s')
+                ]
             ]);
         } catch (\Exception $e) {
-            Log::error('Error updating case status: ' . $e->getMessage());
+            Log::error('Error closing case: ' . $e->getMessage());
             return response()->json([
                 'success' => false,
-                'message' => 'Gagal memperbarui status kasus'
+                'message' => 'Gagal menutup kasus: ' . $e->getMessage()
             ], 500);
         }
     }
@@ -714,33 +935,39 @@ class PetugasController extends Controller
 
             $lastCheckTime = \Carbon\Carbon::parse($lastCheck);
 
-            // Get new assignments since last check
-            $newAssignments = Cases::with(['reporterUser.citizenProfile'])
+            // Get new dispatch assignments since last check (from case_dispatches table)
+            $newDispatchIds = DB::table('case_dispatches')
                 ->where(function ($q) use ($user) {
-                    // Cases assigned to this specific petugas
                     $q->where('assigned_petugas_id', $user->id)
-                        // OR cases assigned to this petugas's unit (but not to specific petugas)
                         ->orWhere(function ($subq) use ($user) {
-                            $subq->where('assigned_unit_id', $user->unit_id)
+                            $subq->where('unit_id', $user->unit_id)
                                 ->whereNull('assigned_petugas_id');
                         });
                 })
                 ->where('dispatched_at', '>', $lastCheckTime)
-                ->orderBy('dispatched_at', 'desc')
+                ->pluck('case_id');
+
+            $newAssignments = Cases::with(['reporterUser.citizenProfile', 'dispatches'])
+                ->whereIn('id', $newDispatchIds)
+                ->orderBy('created_at', 'desc')
                 ->get();
 
-            // Get status updates for existing assigned cases
+            // Get status updates for existing assigned cases (from case_dispatches table)
+            $assignedCaseIds = DB::table('case_dispatches')
+                ->where(function ($q) use ($user) {
+                    $q->where('assigned_petugas_id', $user->id)
+                        ->orWhere(function ($subq) use ($user) {
+                            $subq->where('unit_id', $user->unit_id)
+                                ->whereNull('assigned_petugas_id');
+                        });
+                })
+                ->pluck('case_id');
+
             $statusUpdates = Cases::with(['caseEvents' => function ($q) use ($lastCheckTime) {
                 $q->where('created_at', '>', $lastCheckTime)
                     ->orderBy('created_at', 'desc');
             }])
-                ->where(function ($q) use ($user) {
-                    $q->where('assigned_petugas_id', $user->id)
-                        ->orWhere(function ($subq) use ($user) {
-                            $subq->where('assigned_unit_id', $user->unit_id)
-                                ->whereNull('assigned_petugas_id');
-                        });
-                })
+                ->whereIn('id', $assignedCaseIds)
                 ->where('updated_at', '>', $lastCheckTime)
                 ->whereNotIn('status', ['NEW', 'PENDING']) // Only dispatched cases
                 ->get();
@@ -774,7 +1001,7 @@ class PetugasController extends Controller
                     'reporter_phone' => $case->phone ?? $case->reporterUser->phone ?? null,
                     'distance_km' => $distance,
                     'eta_minutes' => $eta,
-                    'dispatched_at' => $case->dispatched_at,
+                    'dispatched_at' => $case->dispatches->first()?->dispatched_at,
                     'created_at' => $case->created_at,
                     'google_maps_url' => "https://www.google.com/maps?q={$case->lat},{$case->lon}",
                     'priority' => $this->calculatePriority($case->category, $distance)
@@ -803,6 +1030,145 @@ class PetugasController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Gagal mengecek update'
+            ], 500);
+        }
+    }
+
+    /**
+     * Get new assignments (tugas baru) for petugas
+     * This endpoint returns only NEW assignments that haven't been acknowledged yet
+     */
+    public function getNewAssignments(Request $request)
+    {
+        try {
+            $user = $request->user();
+            $limit = $request->get('limit', 20);
+
+            // Get recent assignments (last 24 hours) from case_dispatches table
+            $recentDispatchIds = DB::table('case_dispatches')
+                ->where(function ($q) use ($user) {
+                    $q->where('assigned_petugas_id', $user->id)
+                        ->orWhere(function ($subq) use ($user) {
+                            $subq->where('unit_id', $user->unit_id)
+                                ->whereNull('assigned_petugas_id');
+                        });
+                })
+                ->where('dispatched_at', '>=', now()->subDay())
+                ->pluck('case_id');
+
+            $newAssignments = Cases::with(['reporterUser.citizenProfile', 'dispatches'])
+                ->whereIn('id', $recentDispatchIds)
+                ->whereIn('status', ['DISPATCHED', 'ON_THE_WAY', 'ON_SCENE'])
+                ->orderBy('created_at', 'desc')
+                ->limit($limit)
+                ->get();
+
+            // Enrich with distance and ETA
+            $enrichedAssignments = $newAssignments->map(function ($case) use ($user) {
+                $distance = null;
+                $eta = null;
+                $what3words = null;
+
+                if ($user->last_latitude && $user->last_longitude && $case->lat && $case->lon) {
+                    $distance = $this->calculateDistance(
+                        $user->last_latitude,
+                        $user->last_longitude,
+                        (float) $case->lat,
+                        (float) $case->lon
+                    );
+                    $eta = round(($distance / 40) * 60); // minutes
+                }
+
+                // Get What3Words if available
+                try {
+                    if ($case->lat && $case->lon) {
+                        $what3words = $this->what3words->convertToWords(
+                            $case->lat,
+                            $case->lon
+                        );
+                    }
+                } catch (\Exception $e) {
+                    // Ignore What3Words errors
+                }
+
+                return [
+                    'id' => $case->id,
+                    'short_id' => $case->short_id,
+                    'category' => $case->category,
+                    'description' => $case->description,
+                    'status' => $case->status,
+                    'location' => [
+                        'address' => $case->locator_text,
+                        'latitude' => $case->lat,
+                        'longitude' => $case->lon,
+                        'accuracy' => $case->accuracy,
+                        'what3words' => $what3words
+                    ],
+                    'reporter' => [
+                        'name' => $case->reporterUser->name ?? 'Unknown',
+                        'phone' => $case->phone ?? $case->reporterUser->phone ?? null
+                    ],
+                    'navigation' => [
+                        'distance_km' => $distance,
+                        'eta_minutes' => $eta,
+                        'google_maps_url' => "https://www.google.com/maps?q={$case->lat},{$case->lon}"
+                    ],
+                    'priority' => $this->calculatePriority($case->category, $distance),
+                    'dispatched_at' => $case->dispatches->first()?->dispatched_at?->format('Y-m-d H:i:s'),
+                    'dispatched_at_human' => $case->dispatches->first()?->dispatched_at?->diffForHumans()
+                ];
+            });
+
+            return response()->json([
+                'success' => true,
+                'data' => $enrichedAssignments,
+                'count' => $enrichedAssignments->count()
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error getting new assignments: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal mengambil tugas baru'
+            ], 500);
+        }
+    }
+
+    /**
+     * Get unread notifications count
+     */
+    public function getUnreadCount(Request $request)
+    {
+        try {
+            $user = $request->user();
+
+            // Count new assignments that haven't been viewed (from case_dispatches table)
+            $recentDispatchIds = DB::table('case_dispatches')
+                ->where(function ($q) use ($user) {
+                    $q->where('assigned_petugas_id', $user->id)
+                        ->orWhere(function ($subq) use ($user) {
+                            $subq->where('unit_id', $user->unit_id)
+                                ->whereNull('assigned_petugas_id');
+                        });
+                })
+                ->where('dispatched_at', '>=', now()->subHours(12))
+                ->pluck('case_id');
+
+            $newAssignmentsCount = Cases::whereIn('id', $recentDispatchIds)
+                ->whereIn('status', ['DISPATCHED'])
+                ->count();
+
+            return response()->json([
+                'success' => true,
+                'data' => [
+                    'unread_count' => $newAssignmentsCount,
+                    'has_new_assignments' => $newAssignmentsCount > 0
+                ]
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error getting unread count: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal mengambil jumlah notifikasi'
             ], 500);
         }
     }

@@ -63,7 +63,14 @@ class PetugasController extends Controller
 
         $case = $dispatch->case;
 
-        return view('petugas.case-detail', compact('case', 'dispatch'));
+        // Get petugas location from database as fallback
+        $petugasLocation = [
+            'lat' => $user->last_latitude,
+            'lon' => $user->last_longitude,
+            'updated_at' => $user->last_location_update
+        ];
+
+        return view('petugas.case-detail', compact('case', 'dispatch', 'petugasLocation'));
     }
 
     /**

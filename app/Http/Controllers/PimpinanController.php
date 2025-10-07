@@ -3,9 +3,12 @@
 namespace App\Http\Controllers;
 
 use App\Models\CaseDispatch;
+use App\Models\CaseEvent;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class PimpinanController extends Controller
 {
@@ -21,11 +24,11 @@ class PimpinanController extends Controller
             abort(403, 'Unauthorized: Only PIMPINAN can access this page');
         }
 
-        // Get the unit where this user is pimpinan
-        $unit = $user->unitAsPimpinan;
+        // Get the unit - try unitAsPimpinan first, fallback to user's unit
+        $unit = $user->unitAsPimpinan ?? $user->unit;
 
         if (!$unit) {
-            abort(403, 'Unauthorized: You are not assigned as pimpinan of any unit');
+            abort(403, 'Unauthorized: You are not assigned to any unit');
         }
 
         // Get dispatches for this unit that haven't been assigned to petugas yet
@@ -62,49 +65,128 @@ class PimpinanController extends Controller
      */
     public function assignPetugas(Request $request, CaseDispatch $dispatch)
     {
-        $user = Auth::user();
+        try {
+            $user = Auth::user();
 
-        // Check if user is pimpinan
-        if ($user->role !== 'PIMPINAN') {
-            return back()->with('error', 'Unauthorized: Only PIMPINAN can assign petugas');
-        }
+            // Check if user is pimpinan
+            if ($user->role !== 'PIMPINAN') {
+                Log::warning('Unauthorized assign attempt', ['user_id' => $user->id, 'role' => $user->role]);
+                return back()->with('error', 'Unauthorized: Only PIMPINAN can assign petugas');
+            }
 
-        // Get the unit where this user is pimpinan
-        $unit = $user->unitAsPimpinan;
+            // Get the unit - try unitAsPimpinan first, fallback to user's unit
+            $unit = $user->unitAsPimpinan ?? $user->unit;
 
-        if (!$unit || $dispatch->unit_id !== $unit->id) {
-            return back()->with('error', 'Unauthorized: This dispatch is not for your unit');
-        }
-
-        // Validate request
-        $validated = $request->validate([
-            'assigned_petugas_id' => 'required|exists:users,id',
-            'notes' => 'nullable|string|max:1000',
-        ]);
-
-        // Verify the petugas belongs to this unit
-        $petugas = User::findOrFail($validated['assigned_petugas_id']);
-        if ($petugas->unit_id !== $unit->id || $petugas->role !== 'PETUGAS') {
-            return back()->with('error', 'Invalid petugas selection');
-        }
-
-        // Update the dispatch
-        $dispatch->update([
-            'assigned_petugas_id' => $validated['assigned_petugas_id'],
-            'notes' => $validated['notes'] ?? $dispatch->notes,
-            'assigned_at' => now(),
-        ]);
-
-        // Update the case status to DISPATCHED
-        $case = $dispatch->case;
-        if ($case->status === 'NEW') {
-            $case->update([
-                'status' => 'DISPATCHED',
-                'dispatched_at' => now(),
+            // Enhanced logging for debugging
+            Log::info('Assign Petugas Debug', [
+                'user_id' => $user->id,
+                'user_role' => $user->role,
+                'user_unit_id' => $user->unit_id,
+                'unitAsPimpinan_exists' => $user->unitAsPimpinan !== null,
+                'unitAsPimpinan_id' => $user->unitAsPimpinan?->id,
+                'fallback_to_user_unit' => $user->unitAsPimpinan === null && $user->unit !== null,
+                'final_unit_id' => $unit?->id,
+                'dispatch_id' => $dispatch->id,
+                'dispatch_unit_id' => $dispatch->unit_id,
+                'dispatch_unit_id_type' => gettype($dispatch->unit_id),
+                'final_unit_id_type' => gettype($unit?->id),
+                'strict_comparison' => $dispatch->unit_id !== $unit->id,
+                'loose_comparison' => $dispatch->unit_id != $unit->id,
             ]);
-        }
 
-        return back()->with('success', 'Petugas assigned successfully');
+            if (!$unit) {
+                return back()->with('error', 'Anda tidak terdaftar di unit manapun. Hubungi administrator.');
+            }
+
+            // Use loose comparison (==) instead of strict (===) to avoid type mismatch
+            if ((int)$dispatch->unit_id !== (int)$unit->id) {
+                return back()->with('error', sprintf(
+                    'Dispatch ini untuk unit lain (Unit ID: %d). Anda hanya bisa assign untuk unit Anda (Unit ID: %d).',
+                    $dispatch->unit_id,
+                    $unit->id
+                ));
+            }
+
+            // Validate request
+            $validated = $request->validate([
+                'assigned_petugas_id' => 'required|exists:users,id',
+                'notes' => 'nullable|string|max:1000',
+            ]);
+
+            // Verify the petugas belongs to this unit
+            $petugas = User::findOrFail($validated['assigned_petugas_id']);
+
+            Log::info('Petugas Validation Debug', [
+                'petugas_id' => $petugas->id,
+                'petugas_unit_id' => $petugas->unit_id,
+                'petugas_unit_id_type' => gettype($petugas->unit_id),
+                'unit_id' => $unit->id,
+                'unit_id_type' => gettype($unit->id),
+                'petugas_role' => $petugas->role,
+                'unit_match_strict' => $petugas->unit_id !== $unit->id,
+                'unit_match_loose' => $petugas->unit_id != $unit->id,
+                'role_match' => $petugas->role !== 'PETUGAS',
+            ]);
+
+            if ((int)$petugas->unit_id !== (int)$unit->id) {
+                return back()->with('error', sprintf(
+                    'Petugas ini dari unit lain. Petugas unit_id: %s, Your unit_id: %s',
+                    $petugas->unit_id,
+                    $unit->id
+                ));
+            }
+
+            if ($petugas->role !== 'PETUGAS') {
+                return back()->with('error', sprintf(
+                    'User ini bukan petugas. Role: %s',
+                    $petugas->role
+                ));
+            }
+
+            DB::transaction(function () use ($dispatch, $validated, $user) {
+                // Update the dispatch
+                $dispatch->update([
+                    'assigned_petugas_id' => $validated['assigned_petugas_id'],
+                    'notes' => $validated['notes'] ?? $dispatch->notes,
+                    'assigned_at' => now(),
+                ]);
+
+                // Create case event
+                CaseEvent::create([
+                    'case_id' => $dispatch->case_id,
+                    'actor_type' => 'PIMPINAN',
+                    'actor_id' => $user->id,
+                    'action' => 'PETUGAS_ASSIGNED',
+                    'notes' => "Petugas ditugaskan: " . User::find($validated['assigned_petugas_id'])->name,
+                    'metadata' => [
+                        'dispatch_id' => $dispatch->id,
+                        'petugas_id' => $validated['assigned_petugas_id'],
+                        'notes' => $validated['notes']
+                    ]
+                ]);
+
+                Log::info('Petugas assigned successfully', [
+                    'dispatch_id' => $dispatch->id,
+                    'petugas_id' => $validated['assigned_petugas_id'],
+                    'assigned_by' => $user->id
+                ]);
+            });
+
+            return back()->with('success', 'Petugas berhasil ditugaskan');
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            Log::error('Validation error in assignPetugas', [
+                'errors' => $e->errors(),
+                'dispatch_id' => $dispatch->id
+            ]);
+            return back()->withErrors($e->errors())->withInput();
+        } catch (\Exception $e) {
+            Log::error('Error assigning petugas', [
+                'message' => $e->getMessage(),
+                'dispatch_id' => $dispatch->id,
+                'trace' => $e->getTraceAsString()
+            ]);
+            return back()->with('error', 'Terjadi kesalahan saat menugaskan petugas: ' . $e->getMessage());
+        }
     }
 
     /**
@@ -119,11 +201,11 @@ class PimpinanController extends Controller
             abort(403, 'Unauthorized: Only PIMPINAN can access this page');
         }
 
-        // Get the unit where this user is pimpinan
-        $unit = $user->unitAsPimpinan;
+        // Get the unit - try unitAsPimpinan first, fallback to user's unit
+        $unit = $user->unitAsPimpinan ?? $user->unit;
 
         if (!$unit) {
-            abort(403, 'Unauthorized: You are not assigned as pimpinan of any unit');
+            abort(403, 'Unauthorized: You are not assigned to any unit');
         }
 
         // Find the case and verify it's dispatched to this unit
@@ -160,11 +242,11 @@ class PimpinanController extends Controller
             abort(403, 'Unauthorized: Only PIMPINAN can access this page');
         }
 
-        // Get the unit where this user is pimpinan
-        $unit = $user->unitAsPimpinan;
+        // Get the unit - try unitAsPimpinan first, fallback to user's unit
+        $unit = $user->unitAsPimpinan ?? $user->unit;
 
         if (!$unit) {
-            abort(403, 'Unauthorized: You are not assigned as pimpinan of any unit');
+            abort(403, 'Unauthorized: You are not assigned to any unit');
         }
 
         // Get all petugas in this unit
@@ -188,11 +270,11 @@ class PimpinanController extends Controller
             return back()->with('error', 'Unauthorized: Only PIMPINAN can add petugas');
         }
 
-        // Get the unit where this user is pimpinan
-        $unit = $user->unitAsPimpinan;
+        // Get the unit - try unitAsPimpinan first, fallback to user's unit
+        $unit = $user->unitAsPimpinan ?? $user->unit;
 
         if (!$unit) {
-            return back()->with('error', 'Unauthorized: You are not assigned as pimpinan of any unit');
+            return back()->with('error', 'Unauthorized: You are not assigned to any unit');
         }
 
         // Validate request
