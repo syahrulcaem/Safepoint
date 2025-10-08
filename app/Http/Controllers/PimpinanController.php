@@ -192,7 +192,7 @@ class PimpinanController extends Controller
     /**
      * Show case detail for pimpinan
      */
-    public function showCase($caseId)
+    public function showCase(Request $request, $caseId)
     {
         $user = Auth::user();
 
@@ -211,7 +211,7 @@ class PimpinanController extends Controller
         // Find the case and verify it's dispatched to this unit
         $dispatch = CaseDispatch::where('case_id', $caseId)
             ->where('unit_id', $unit->id)
-            ->with(['case.caseEvents', 'case.reporterUser', 'assignedPetugas', 'dispatcher'])
+            ->with(['case.caseEvents.actor', 'case.reporterUser', 'assignedPetugas', 'dispatcher'])
             ->firstOrFail();
 
         $case = $dispatch->case;
@@ -222,6 +222,22 @@ class PimpinanController extends Controller
             ->orderBy('name')
             ->get();
 
+        // Check if this is an AJAX request (for modal)
+        if ($request->wantsJson() || $request->ajax()) {
+            $html = view('pimpinan.show-modal', compact(
+                'case',
+                'dispatch',
+                'unit',
+                'availablePetugas'
+            ))->render();
+
+            return response()->json([
+                'success' => true,
+                'html' => $html
+            ]);
+        }
+
+        // Return full page view
         return view('pimpinan.case-detail', compact(
             'case',
             'dispatch',
