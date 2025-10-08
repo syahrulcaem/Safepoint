@@ -16,6 +16,29 @@ Route::post('/petugas/login', [AuthController::class, 'petugasLogin']);
 Route::post('/public/emergency', [PublicEmergencyController::class, 'store'])
     ->middleware('throttle:5,1'); // 5 requests per minute per IP
 
+// Public location endpoint for web tracking (rate limited)
+Route::get('/location/user/{userId}', function ($userId) {
+    $user = \App\Models\User::find($userId);
+
+    if (!$user) {
+        return response()->json([
+            'success' => false,
+            'message' => 'User not found'
+        ], 404);
+    }
+
+    return response()->json([
+        'success' => true,
+        'data' => [
+            'user_id' => $user->id,
+            'name' => $user->name,
+            'latitude' => $user->last_latitude,
+            'longitude' => $user->last_longitude,
+            'last_location_update' => $user->last_location_update,
+        ]
+    ]);
+})->middleware('throttle:60,1'); // 60 requests per minute
+
 // Protected routes for citizens
 Route::middleware('auth:sanctum')->group(function () {
     // Auth

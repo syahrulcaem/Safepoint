@@ -266,7 +266,7 @@
                                             Pilih Petugas <span class="text-red-500">*</span>
                                         </label>
                                         <select name="assigned_petugas_id" id="assigned_petugas_id" required
-                                            class="block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm @error('assigned_petugas_id') border-red-300 @enderror">
+                                            class="block w-full rounded-md shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm @error('assigned_petugas_id') border-red-300 @enderror">
                                             <option value="">-- Pilih Petugas --</option>
                                             @foreach ($availablePetugas as $petugas)
                                                 <option value="{{ $petugas->id }}"
@@ -285,7 +285,7 @@
                                             Catatan untuk Petugas (Opsional)
                                         </label>
                                         <textarea name="notes" id="notes" rows="4"
-                                            class="block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm @error('notes') border-red-300 @enderror"
+                                            class="block w-full rounded-md shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm @error('notes') border-red-300 @enderror"
                                             placeholder="Instruksi khusus untuk petugas...">{{ old('notes', $dispatch->notes) }}</textarea>
                                         @error('notes')
                                             <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
@@ -307,7 +307,7 @@
                     </div>
                 @else
                     <!-- Petugas Already Assigned -->
-                    <div class="bg-white rounded-lg shadow sticky top-4">
+                    <div class="bg-white rounded-lg shadow sticky top-4 space-y-4">
                         <div class="px-6 py-4 border-b border-gray-200 bg-green-50">
                             <h2 class="text-lg font-semibold text-green-900">Petugas Ditugaskan</h2>
                         </div>
@@ -333,6 +333,76 @@
                                     <strong>Ditugaskan:</strong> {{ $dispatch->assigned_at->format('d F Y, H:i') }} WIB
                                 </p>
                             </div>
+
+                            @if ($dispatch->assignedPetugas->last_latitude && $dispatch->assignedPetugas->last_longitude)
+                                <!-- Route Information -->
+                                <div class="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg" id="routeInfo">
+                                    <div class="flex items-center mb-3">
+                                        <svg class="w-5 h-5 text-blue-600 mr-2" fill="none" stroke="currentColor"
+                                            viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7">
+                                            </path>
+                                        </svg>
+                                        <h3 class="text-sm font-semibold text-blue-900">Informasi Rute</h3>
+                                    </div>
+
+                                    <div class="space-y-2">
+                                        <div class="flex items-center justify-between">
+                                            <span class="text-xs text-blue-700">Jarak:</span>
+                                            <span class="text-sm font-bold text-blue-900" id="routeDistance">
+                                                <svg class="inline w-4 h-4 animate-spin" fill="none"
+                                                    stroke="currentColor" viewBox="0 0 24 24">
+                                                    <circle class="opacity-25" cx="12" cy="12" r="10"
+                                                        stroke="currentColor" stroke-width="4"></circle>
+                                                    <path class="opacity-75" fill="currentColor"
+                                                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                                                    </path>
+                                                </svg>
+                                                Loading...
+                                            </span>
+                                        </div>
+                                        <div class="flex items-center justify-between">
+                                            <span class="text-xs text-blue-700">Estimasi Waktu:</span>
+                                            <span class="text-sm font-bold text-blue-900" id="routeDuration">
+                                                <svg class="inline w-4 h-4 animate-spin" fill="none"
+                                                    stroke="currentColor" viewBox="0 0 24 24">
+                                                    <circle class="opacity-25" cx="12" cy="12" r="10"
+                                                        stroke="currentColor" stroke-width="4"></circle>
+                                                    <path class="opacity-75" fill="currentColor"
+                                                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                                                    </path>
+                                                </svg>
+                                                Loading...
+                                            </span>
+                                        </div>
+                                        <div class="pt-2 border-t border-blue-200">
+                                            <p class="text-xs text-blue-600 italic">
+                                                <svg class="inline w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                                                    <path fill-rule="evenodd"
+                                                        d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
+                                                        clip-rule="evenodd"></path>
+                                                </svg>
+                                                Update otomatis setiap 30 detik
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Last Location Update -->
+                                <div class="mt-4 text-xs text-gray-500 flex items-center">
+                                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                    </svg>
+                                    Update terakhir:
+                                    @if ($dispatch->assignedPetugas->last_location_update)
+                                        {{ \Carbon\Carbon::parse($dispatch->assignedPetugas->last_location_update)->diffForHumans() }}
+                                    @else
+                                        Tidak ada data
+                                    @endif
+                                </div>
+                            @endif
                         </div>
                     </div>
                 @endif
@@ -359,32 +429,59 @@
             </div>
         </div>
     </div>
-@endsection
 
-
-@push('styles')
-    <!-- Mapbox GL JS CSS -->
-    <link href='https://api.mapbox.com/mapbox-gl-js/v3.0.1/mapbox-gl.css' rel='stylesheet' />
-@endpush
-
-@push('scripts')
     <!-- Mapbox GL JS -->
-    <script src='https://api.mapbox.com/mapbox-gl-js/v3.0.1/mapbox-gl.js'></script>
+    <script src='https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js'></script>
+    <link href='https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css' rel='stylesheet' />
+
     <script>
+        console.log('=== MAPBOX DEBUG START ===');
+        console.log('Mapbox Token:',
+            'pk.eyJ1IjoicGFsb24wMDUiLCJhIjoiY21jMjJ4MDJvMDR0bzJqc2ZtMmxrOW56OSJ9.YFif8g-Il5g5qdynTCXLbA');
+        console.log('Case Lat/Lon:', {{ $case->lat ?? 'null' }}, {{ $case->lon ?? 'null' }});
+
+        @if ($dispatch && $dispatch->assignedPetugas)
+            console.log('Assigned Petugas:', {
+                id: {{ $dispatch->assignedPetugas->id ?? 'null' }},
+                name: @json($dispatch->assignedPetugas->name ?? 'N/A'),
+                lat: {{ $dispatch->assignedPetugas->last_latitude ?? 'null' }},
+                lon: {{ $dispatch->assignedPetugas->last_longitude ?? 'null' }},
+                last_update: @json($dispatch->assignedPetugas->last_location_update ?? 'N/A')
+            });
+        @else
+            console.log('No assigned petugas or petugas relation not loaded');
+        @endif
+        console.log('=== MAPBOX DEBUG END ===');
+
         @if ($case->lat && $case->lon)
-            mapboxgl.accessToken = @json(config('services.mapbox.access_token'));
+            mapboxgl.accessToken =
+                'pk.eyJ1IjoicGFsb24wMDUiLCJhIjoiY21jMjJ4MDJvMDR0bzJqc2ZtMmxrOW56OSJ9.YFif8g-Il5g5qdynTCXLbA';
+
+            if (!mapboxgl.accessToken) {
+                console.error('❌ Mapbox token is not configured!');
+            }
+
             const caseLat = {{ $case->lat }};
             const caseLon = {{ $case->lon }};
+
             const map = new mapboxgl.Map({
                 container: 'map',
-                style: 'mapbox://styles/mapbox/streets-v12',
+                style: 'mapbox://styles/mapbox/streets-v11',
                 center: [caseLon, caseLat],
                 zoom: 15
             });
 
+            map.on('load', function() {
+                console.log('✅ Map loaded successfully');
+            });
+
+            map.on('error', function(e) {
+                console.error('❌ Map error:', e);
+            });
+
             // Add marker for case location (RED)
             const caseMarker = new mapboxgl.Marker({
-                    color: 'red'
+                    color: '#EF4444' // red-500
                 })
                 .setLngLat([caseLon, caseLat])
                 .setPopup(new mapboxgl.Popup().setHTML(`
@@ -397,44 +494,259 @@
                 .addTo(map);
             caseMarker.togglePopup();
 
-            @if ($dispatch && $dispatch->petugas && $dispatch->petugas->last_latitude && $dispatch->petugas->last_longitude)
-                let petugasLat = {{ $dispatch->petugas->last_latitude }};
-                let petugasLon = {{ $dispatch->petugas->last_longitude }};
-                const petugasName = @json($dispatch->petugas->name);
+            @if (
+                $dispatch &&
+                    $dispatch->assignedPetugas &&
+                    $dispatch->assignedPetugas->last_latitude &&
+                    $dispatch->assignedPetugas->last_longitude)
+                console.log('✅ Adding petugas marker...');
+
+                let petugasLat = {{ $dispatch->assignedPetugas->last_latitude }};
+                let petugasLon = {{ $dispatch->assignedPetugas->last_longitude }};
+                const petugasName = @json($dispatch->assignedPetugas->name);
+                const petugasId = {{ $dispatch->assignedPetugas->id }};
+
                 let petugasMarker = new mapboxgl.Marker({
-                        color: 'blue'
+                        color: '#3B82F6' // blue-500
                     })
                     .setLngLat([petugasLon, petugasLat])
                     .setPopup(new mapboxgl.Popup().setHTML(`
                         <div class='text-sm'>
                             <strong>${petugasName}</strong><br>
-                            <span class='text-xs text-gray-500'>Lokasi Petugas</span>
+                            <span class='text-xs text-gray-500'>Lokasi Petugas</span><br>
+                            <span class='text-xs text-gray-400'>${petugasLat.toFixed(6)}, ${petugasLon.toFixed(6)}</span>
                         </div>
                     `))
                     .addTo(map);
+
+                console.log('✅ Petugas marker added at:', petugasLat, petugasLon);
 
                 // Fit map to show both markers
                 const bounds = new mapboxgl.LngLatBounds();
                 bounds.extend([caseLon, caseLat]);
                 bounds.extend([petugasLon, petugasLat]);
                 map.fitBounds(bounds, {
-                    padding: 50
+                    padding: 80,
+                    maxZoom: 15
                 });
 
-                // Auto-refresh petugas location every 30 seconds
-                setInterval(function() {
-                    fetch(`/api/location/user/{{ $dispatch->petugas->id }}`)
-                        .then(response => response.json())
+                // Function to fetch and draw route
+                function drawRoute() {
+                    console.log('🗺️ Fetching route from Mapbox Directions API...');
+
+                    // Update UI to loading state
+                    const distanceEl = document.getElementById('routeDistance');
+                    const durationEl = document.getElementById('routeDuration');
+
+                    if (distanceEl && distanceEl.textContent !== 'Loading...') {
+                        distanceEl.innerHTML =
+                            '<svg class="inline w-4 h-4 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Loading...';
+                    }
+                    if (durationEl && durationEl.textContent !== 'Loading...') {
+                        durationEl.innerHTML =
+                            '<svg class="inline w-4 h-4 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Loading...';
+                    }
+
+                    const directionsUrl =
+                        `https://api.mapbox.com/directions/v5/mapbox/driving/${petugasLon},${petugasLat};${caseLon},${caseLat}?geometries=geojson&access_token=${mapboxgl.accessToken}`;
+
+                    fetch(directionsUrl)
+                        .then(response => {
+                            if (!response.ok) {
+                                throw new Error(`HTTP ${response.status}`);
+                            }
+                            return response.json();
+                        })
                         .then(data => {
-                            if (data.success && data.data.latitude && data.data.longitude) {
-                                petugasLat = data.data.latitude;
-                                petugasLon = data.data.longitude;
-                                petugasMarker.setLngLat([petugasLon, petugasLat]);
+                            console.log('🛣️ Directions API response:', data);
+
+                            if (data.routes && data.routes.length > 0) {
+                                const route = data.routes[0];
+                                const distance = (route.distance / 1000).toFixed(2); // km
+                                const duration = Math.round(route.duration / 60); // minutes
+
+                                console.log(`✅ Route found: ${distance} km, ${duration} minutes`);
+
+                                // Remove old route layer if exists
+                                if (map.getLayer('route')) {
+                                    map.removeLayer('route');
+                                    map.removeSource('route');
+                                }
+
+                                // Add route layer
+                                map.addSource('route', {
+                                    type: 'geojson',
+                                    data: {
+                                        type: 'Feature',
+                                        properties: {},
+                                        geometry: route.geometry
+                                    }
+                                });
+
+                                map.addLayer({
+                                    id: 'route',
+                                    type: 'line',
+                                    source: 'route',
+                                    layout: {
+                                        'line-join': 'round',
+                                        'line-cap': 'round'
+                                    },
+                                    paint: {
+                                        'line-color': '#3B82F6', // blue-500
+                                        'line-width': 4,
+                                        'line-opacity': 0.75
+                                    }
+                                });
+
+                                // Update petugas popup with distance & ETA
+                                petugasMarker.setPopup(
+                                    new mapboxgl.Popup().setHTML(`
+                                        <div class='text-sm'>
+                                            <strong>${petugasName}</strong><br>
+                                            <span class='text-xs text-gray-500'>Lokasi Petugas</span><br>
+                                            <span class='text-xs text-gray-400'>${petugasLat.toFixed(6)}, ${petugasLon.toFixed(6)}</span><br>
+                                            <div class='mt-2 pt-2 border-t border-gray-200'>
+                                                <div class='flex items-center gap-1'>
+                                                    <svg class='w-3 h-3 text-blue-500' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                                                        <path stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M13 7h8m0 0v8m0-8l-8 8-4-4-6 6'></path>
+                                                    </svg>
+                                                    <span class='text-xs font-medium text-blue-600'>${distance} km</span>
+                                                </div>
+                                                <div class='flex items-center gap-1 mt-1'>
+                                                    <svg class='w-3 h-3 text-blue-500' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                                                        <path stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z'></path>
+                                                    </svg>
+                                                    <span class='text-xs font-medium text-blue-600'>~${duration} menit</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    `)
+                                );
+
+                                // Update sidebar info panel
+                                const distanceEl = document.getElementById('routeDistance');
+                                const durationEl = document.getElementById('routeDuration');
+
+                                if (distanceEl) {
+                                    distanceEl.innerHTML = `
+                                        <svg class="inline w-4 h-4 mr-1 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path>
+                                        </svg>
+                                        ${distance} km
+                                    `;
+                                }
+
+                                if (durationEl) {
+                                    durationEl.innerHTML = `
+                                        <svg class="inline w-4 h-4 mr-1 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                        </svg>
+                                        ~${duration} menit
+                                    `;
+                                }
+                            } else {
+                                console.warn('⚠️ No route found');
+
+                                // Show error in sidebar
+                                const distanceEl = document.getElementById('routeDistance');
+                                const durationEl = document.getElementById('routeDuration');
+
+                                if (distanceEl) distanceEl.textContent = 'N/A';
+                                if (durationEl) durationEl.textContent = 'N/A';
                             }
                         })
-                        .catch(error => console.error('Error fetching petugas location:', error));
-                }, 30000);
+                        .catch(error => {
+                            console.error('❌ Error fetching directions:', error);
+
+                            // Show error in sidebar
+                            const distanceEl = document.getElementById('routeDistance');
+                            const durationEl = document.getElementById('routeDuration');
+
+                            if (distanceEl) distanceEl.textContent = 'Error';
+                            if (durationEl) durationEl.textContent = 'Error';
+                        });
+                }
+
+                // Draw route - multiple triggers to ensure it runs
+                let routeDrawn = false;
+
+                // Try 1: On map load
+                map.on('load', function() {
+                    console.log('✅ Map loaded, drawing route (trigger 1)...');
+                    setTimeout(function() {
+                        if (!routeDrawn) {
+                            drawRoute();
+                            routeDrawn = true;
+                        }
+                    }, 500);
+                });
+
+                // Try 2: After 2 seconds (fallback)
+                setTimeout(function() {
+                    if (!routeDrawn) {
+                        console.log('⚠️ Drawing route via timeout fallback (trigger 2)...');
+                        drawRoute();
+                        routeDrawn = true;
+                    }
+                }, 2000);
+
+                // Try 3: After 4 seconds (second fallback)
+                setTimeout(function() {
+                    if (!routeDrawn) {
+                        console.log('⚠️ Drawing route via second fallback (trigger 3)...');
+                        drawRoute();
+                        routeDrawn = true;
+                    }
+                }, 4000);
+
+                // Auto-refresh petugas location and route every 30 seconds
+                setInterval(function() {
+                    console.log('🔄 Fetching updated petugas location for ID:', petugasId);
+
+                    fetch(`/api/location/user/${petugasId}`)
+                        .then(response => {
+                            console.log('📡 Location API response status:', response.status);
+                            return response.json();
+                        })
+                        .then(data => {
+                            console.log('📍 Location API data:', data);
+
+                            if (data.success && data.data.latitude && data.data.longitude) {
+                                const oldLat = petugasLat;
+                                const oldLon = petugasLon;
+
+                                petugasLat = data.data.latitude;
+                                petugasLon = data.data.longitude;
+
+                                // Only update if location changed significantly (> 10 meters)
+                                const distance = Math.sqrt(
+                                    Math.pow((petugasLat - oldLat) * 111000, 2) +
+                                    Math.pow((petugasLon - oldLon) * 111000, 2)
+                                );
+
+                                if (distance > 10) {
+                                    petugasMarker.setLngLat([petugasLon, petugasLat]);
+                                    console.log('✅ Petugas marker updated to:', petugasLat, petugasLon,
+                                        `(moved ${distance.toFixed(0)}m)`);
+
+                                    // Redraw route
+                                    drawRoute();
+                                } else {
+                                    console.log('⏸️ Location unchanged (< 10m)');
+                                }
+                            } else {
+                                console.warn('⚠️ No valid location data received');
+                            }
+                        })
+                        .catch(error => {
+                            console.error('❌ Error fetching petugas location:', error);
+                        });
+                }, 30000); // 30 seconds
+            @else
+                console.log('⚠️ Petugas marker NOT added - petugas not assigned or no location data');
             @endif
+        @else
+            console.error('❌ Cannot initialize map - case lat/lon missing');
         @endif
     </script>
-@endpush
+@endsection
