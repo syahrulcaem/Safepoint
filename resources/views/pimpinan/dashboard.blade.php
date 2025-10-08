@@ -3,219 +3,382 @@
 @section('title', 'Dashboard Pimpinan')
 
 @section('content')
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div class="container-fluid">
         <!-- Header -->
-        <div class="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between">
-            <div>
-                <h1 class="text-2xl font-bold text-gray-900">Dashboard Pimpinan</h1>
-                <p class="text-sm text-gray-600 mt-1">Unit: <span class="font-semibold">{{ $unit->name }}</span>
-                    ({{ $unit->type }})</p>
-            </div>
-            <div class="mt-4 sm:mt-0">
-                <a href="{{ route('pimpinan.petugas') }}"
-                    class="inline-flex items-center px-4 py-2 bg-gray-100 text-gray-700 text-sm font-medium rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-500">
-                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-                    </svg>
-                    Kelola Petugas
-                </a>
+        <div class="row">
+            <div class="col-12">
+                <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+                    <div>
+                        <h4 class="mb-sm-0 font-size-18">Dashboard Pimpinan</h4>
+                        <p class="text-muted mb-0">Unit: <span class="fw-semibold">{{ $unit->name }}</span> ({{ $unit->type }})</p>
+                    </div>
+                    <div class="page-title-right">
+                        <a href="{{ route('pimpinan.petugas') }}" class="btn btn-primary">
+                            <i class="bx bx-user-plus me-1"></i> Kelola Petugas
+                        </a>
+                    </div>
+                </div>
             </div>
         </div>
 
         <!-- Stats Cards -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-            <div class="bg-white rounded-lg shadow p-6">
-                <div class="text-sm font-medium text-gray-500">Dispatch Pending</div>
-                <div class="mt-2 text-3xl font-bold text-orange-600">{{ $pendingDispatches->count() }}</div>
-                <p class="text-xs text-gray-500 mt-1">Menunggu penugasan petugas</p>
+        <div class="row">
+            <div class="col-xl-4 col-md-6">
+                <div class="card mini-stats-wid">
+                    <div class="card-body">
+                        <div class="d-flex">
+                            <div class="flex-grow-1">
+                                <p class="text-muted fw-medium">Dispatch Pending</p>
+                                <h4 class="mb-0">{{ $pendingDispatches->count() }}</h4>
+                            </div>
+                            <div class="flex-shrink-0 align-self-center">
+                                <div class="mini-stat-icon avatar-sm rounded-circle" style="background: linear-gradient(45deg, #dc3545 0%, #c82333 100%) !important;">
+                                    <span class="avatar-title" style="background: linear-gradient(45deg, #dc3545 0%, #c82333 100%) !important;">
+                                        <i class="bx bx-time-five font-size-20 text-white"></i>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
 
-            <div class="bg-white rounded-lg shadow p-6">
-                <div class="text-sm font-medium text-gray-500">Sudah Ditugaskan</div>
-                <div class="mt-2 text-3xl font-bold text-green-600">{{ $assignedDispatches->count() }}</div>
-                <p class="text-xs text-gray-500 mt-1">Petugas sudah ditugaskan</p>
+            <div class="col-xl-4 col-md-6">
+                <div class="card mini-stats-wid">
+                    <div class="card-body">
+                        <div class="d-flex">
+                            <div class="flex-grow-1">
+                                <p class="text-muted fw-medium">Sudah Ditugaskan</p>
+                                <h4 class="mb-0 text-success">{{ $assignedDispatches->count() }}</h4>
+                            </div>
+                            <div class="flex-shrink-0 align-self-center">
+                                <div class="mini-stat-icon avatar-sm rounded-circle" style="background: linear-gradient(45deg, #198754 0%, #146c43 100%) !important;">
+                                    <span class="avatar-title" style="background: linear-gradient(45deg, #198754 0%, #146c43 100%) !important;">
+                                        <i class="bx bx-check-circle font-size-20 text-white"></i>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
 
-            <div class="bg-white rounded-lg shadow p-6">
-                <div class="text-sm font-medium text-gray-500">Total Petugas</div>
-                <div class="mt-2 text-3xl font-bold text-blue-600">{{ $availablePetugas->count() }}</div>
-                <p class="text-xs text-gray-500 mt-1">Petugas di unit Anda</p>
+            <div class="col-xl-4 col-md-6">
+                <div class="card mini-stats-wid">
+                    <div class="card-body">
+                        <div class="d-flex">
+                            <div class="flex-grow-1">
+                                <p class="text-muted fw-medium">Total Petugas</p>
+                                <h4 class="mb-0">{{ $availablePetugas->count() }}</h4>
+                            </div>
+                            <div class="flex-shrink-0 align-self-center">
+                                <div class="mini-stat-icon avatar-sm rounded-circle" style="background: linear-gradient(45deg, #6c757d 0%, #495057 100%) !important;">
+                                    <span class="avatar-title" style="background: linear-gradient(45deg, #6c757d 0%, #495057 100%) !important;">
+                                        <i class="bx bx-user font-size-20 text-white"></i>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
 
         <!-- Pending Dispatches -->
-        <div class="bg-white rounded-lg shadow mb-6">
-            <div class="px-6 py-4 border-b border-gray-200">
-                <h2 class="text-lg font-semibold text-gray-900">Dispatch Menunggu Penugasan</h2>
-                <p class="text-sm text-gray-500 mt-1">Tugaskan petugas untuk menangani kasus ini</p>
-            </div>
-            <div class="divide-y divide-gray-200">
-                @forelse($pendingDispatches as $dispatch)
-                    <div class="px-6 py-4">
-                        <div class="flex items-start justify-between">
-                            <div class="flex-1">
-                                <div class="flex items-center space-x-2 mb-2">
-                                    <span class="font-mono text-sm font-medium text-gray-900">
-                                        {{ $dispatch->case->short_id }}
-                                    </span>
-                                    <span class="px-2 py-1 text-xs font-medium rounded-full bg-orange-100 text-orange-800">
-                                        {{ $dispatch->case->status }}
-                                    </span>
-                                </div>
-
-                                <p class="text-sm text-gray-600 mb-2">
-                                    <strong>Lokasi:</strong> {{ $dispatch->case->locator_text ?? 'N/A' }}
-                                </p>
-
-                                @if ($dispatch->notes)
-                                    <p class="text-sm text-gray-600 mb-2">
-                                        <strong>Catatan Operator:</strong> {{ $dispatch->notes }}
-                                    </p>
-                                @endif
-
-                                <p class="text-xs text-gray-500">
-                                    Dispatch oleh: {{ $dispatch->dispatcher->name }} •
-                                    {{ $dispatch->dispatched_at->diffForHumans() }}
-                                </p>
-                            </div>
-
-                            <div class="ml-4 flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
-                                <a href="{{ route('pimpinan.case.show', $dispatch->case->id) }}"
-                                    class="px-4 py-2 bg-gray-100 text-gray-700 text-sm font-medium rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-500 text-center whitespace-nowrap">
-                                    Lihat Detail
-                                </a>
-                                <button onclick="showAssignModal({{ $dispatch->id }}, '{{ $dispatch->case->short_id }}')"
-                                    class="px-4 py-2 bg-red-600 text-white text-sm font-medium rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 whitespace-nowrap">
-                                    Tugaskan Petugas
-                                </button>
-                            </div>
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header" style="background: linear-gradient(45deg, #dc3545 0%, #c82333 100%) !important;">
+                        <div class="d-flex align-items-center justify-content-between">
+                            <h4 class="card-title mb-0 text-white">
+                                <i class="bx bx-error-circle me-2"></i>Dispatch Menunggu Penugasan
+                            </h4>
+                            <span class="badge bg-white text-danger">{{ $pendingDispatches->count() }} Pending</span>
                         </div>
                     </div>
-                @empty
-                    <div class="px-6 py-8 text-center text-gray-500">
-                        <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor"
-                            viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                        </svg>
-                        <p class="mt-2 text-sm">Tidak ada dispatch yang menunggu penugasan</p>
+                    <div class="card-body">
+                        @forelse($pendingDispatches as $dispatch)
+                            <div class="border rounded p-3 mb-3 hover-shadow" style="transition: all 0.3s;">
+                                <div class="row align-items-center">
+                                    <div class="col-lg-8">
+                                        <div class="d-flex align-items-start gap-3">
+                                            <div class="avatar-sm">
+                                                <div class="avatar-title rounded" style="background: linear-gradient(45deg, #dc3545 0%, #c82333 100%) !important; color: white;">
+                                                    <i class="bx bx-alarm font-size-20"></i>
+                                                </div>
+                                            </div>
+                                            <div class="flex-grow-1">
+                                                <div class="d-flex align-items-center gap-2 mb-2">
+                                                    <h5 class="mb-0 font-monospace">{{ $dispatch->case->short_id }}</h5>
+                                                    <x-status-badge :status="$dispatch->case->status" />
+                                                    <span class="badge badge-soft-{{ $dispatch->case->category === 'MEDIS' ? 'primary' : ($dispatch->case->category === 'KEBAKARAN' ? 'danger' : 'secondary') }}">
+                                                        {{ $dispatch->case->category }}
+                                                    </span>
+                                                </div>
+                                                
+                                                <p class="text-muted mb-1">
+                                                    <i class="bx bx-map me-1"></i>
+                                                    <strong>Lokasi:</strong> {{ Str::limit($dispatch->case->locator_text ?? 'N/A', 60) }}
+                                                </p>
+
+                                                @if ($dispatch->notes)
+                                                    <p class="text-muted mb-1">
+                                                        <i class="bx bx-note me-1"></i>
+                                                        <strong>Catatan Operator:</strong> {{ Str::limit($dispatch->notes, 60) }}
+                                                    </p>
+                                                @endif
+
+                                                <p class="text-muted mb-0" style="font-size: 0.85rem;">
+                                                    <i class="bx bx-user me-1"></i>
+                                                    Dispatch oleh: {{ $dispatch->dispatcher->name }} • 
+                                                    <i class="bx bx-time me-1"></i>
+                                                    {{ $dispatch->dispatched_at->diffForHumans() }}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-lg-4 text-lg-end mt-3 mt-lg-0">
+                                        <div class="d-flex flex-column flex-lg-row gap-2 justify-content-lg-end">
+                                            <button onclick="showCaseDetail('{{ $dispatch->case->id }}')" 
+                                                class="btn btn-outline-primary btn-sm">
+                                                <i class="bx bx-show me-1"></i> Lihat Detail
+                                            </button>
+                                            <button onclick="showAssignModal({{ $dispatch->id }}, '{{ $dispatch->case->short_id }}')"
+                                                class="btn btn-sm" style="background: linear-gradient(45deg, #dc3545 0%, #c82333 100%) !important; color: white; border: none;">
+                                                <i class="bx bx-user-plus me-1"></i> Tugaskan Petugas
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        @empty
+                            <div class="text-center py-5">
+                                <div class="avatar-md mx-auto mb-4">
+                                    <div class="avatar-title rounded-circle" style="background: linear-gradient(45deg, #198754 0%, #146c43 100%) !important; color: white;">
+                                        <i class="bx bx-check-circle font-size-24"></i>
+                                    </div>
+                                </div>
+                                <h5 class="font-size-15">Tidak Ada Dispatch Pending</h5>
+                                <p class="text-muted">Semua dispatch sudah ditugaskan ke petugas</p>
+                            </div>
+                        @endforelse
                     </div>
-                @endforelse
+                </div>
             </div>
         </div>
 
         <!-- Assigned Dispatches -->
-        <div class="bg-white rounded-lg shadow">
-            <div class="px-6 py-4 border-b border-gray-200">
-                <h2 class="text-lg font-semibold text-gray-900">Riwayat Penugasan</h2>
-                <p class="text-sm text-gray-500 mt-1">Petugas yang sudah ditugaskan</p>
-            </div>
-            <div class="divide-y divide-gray-200">
-                @forelse($assignedDispatches as $dispatch)
-                    <div class="px-6 py-4">
-                        <div class="flex items-start justify-between">
-                            <div class="flex-1">
-                                <div class="flex items-center space-x-2 mb-2">
-                                    <span class="font-mono text-sm font-medium text-gray-900">
-                                        {{ $dispatch->case->short_id }}
-                                    </span>
-                                    <span class="px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-800">
-                                        {{ $dispatch->case->status }}
-                                    </span>
-                                </div>
-
-                                <p class="text-sm text-gray-600 mb-1">
-                                    <strong>Petugas:</strong> {{ $dispatch->assignedPetugas->name }}
-                                </p>
-
-                                <p class="text-sm text-gray-600 mb-2">
-                                    <strong>Lokasi:</strong> {{ $dispatch->case->locator_text ?? 'N/A' }}
-                                </p>
-
-                                <p class="text-xs text-gray-500">
-                                    Ditugaskan: {{ $dispatch->assigned_at->diffForHumans() }}
-                                </p>
-                            </div>
-
-                            <div class="ml-4">
-                                <a href="{{ route('pimpinan.case.show', $dispatch->case->id) }}"
-                                    class="px-4 py-2 bg-gray-100 text-gray-700 text-sm font-medium rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-500 inline-block">
-                                    Lihat Detail
-                                </a>
-                            </div>
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <div class="d-flex align-items-center justify-content-between">
+                            <h4 class="card-title mb-0">
+                                <i class="bx bx-list-check me-2"></i>Riwayat Penugasan
+                            </h4>
+                            <span class="badge bg-success">{{ $assignedDispatches->count() }} Ditugaskan</span>
                         </div>
                     </div>
-                @empty
-                    <div class="px-6 py-8 text-center text-gray-500">
-                        <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor"
-                            viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2">
-                            </path>
-                        </svg>
-                        <p class="mt-2 text-sm">Belum ada petugas yang ditugaskan</p>
+                    <div class="card-body">
+                        @forelse($assignedDispatches as $dispatch)
+                            <div class="border rounded p-3 mb-3 hover-shadow" style="transition: all 0.3s;">
+                                <div class="row align-items-center">
+                                    <div class="col-lg-8">
+                                        <div class="d-flex align-items-start gap-3">
+                                            <div class="avatar-sm">
+                                                <div class="avatar-title rounded" style="background: linear-gradient(45deg, #198754 0%, #146c43 100%) !important; color: white;">
+                                                    <i class="bx bx-check font-size-20"></i>
+                                                </div>
+                                            </div>
+                                            <div class="flex-grow-1">
+                                                <div class="d-flex align-items-center gap-2 mb-2">
+                                                    <h5 class="mb-0 font-monospace">{{ $dispatch->case->short_id }}</h5>
+                                                    <x-status-badge :status="$dispatch->case->status" />
+                                                    <span class="badge badge-soft-{{ $dispatch->case->category === 'MEDIS' ? 'primary' : ($dispatch->case->category === 'KEBAKARAN' ? 'danger' : 'secondary') }}">
+                                                        {{ $dispatch->case->category }}
+                                                    </span>
+                                                </div>
+                                                
+                                                <p class="text-muted mb-1">
+                                                    <i class="bx bx-user me-1"></i>
+                                                    <strong>Petugas:</strong> {{ $dispatch->assignedPetugas->name }}
+                                                </p>
+
+                                                <p class="text-muted mb-1">
+                                                    <i class="bx bx-map me-1"></i>
+                                                    <strong>Lokasi:</strong> {{ Str::limit($dispatch->case->locator_text ?? 'N/A', 60) }}
+                                                </p>
+
+                                                <p class="text-muted mb-0" style="font-size: 0.85rem;">
+                                                    <i class="bx bx-time me-1"></i>
+                                                    Ditugaskan: {{ $dispatch->assigned_at->diffForHumans() }}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-lg-4 text-lg-end mt-3 mt-lg-0">
+                                        <button onclick="showCaseDetail('{{ $dispatch->case->id }}')" 
+                                            class="btn btn-outline-primary btn-sm">
+                                            <i class="bx bx-show me-1"></i> Lihat Detail
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        @empty
+                            <div class="text-center py-5">
+                                <div class="avatar-md mx-auto mb-4">
+                                    <div class="avatar-title bg-light rounded-circle">
+                                        <i class="bx bx-file font-size-24 text-muted"></i>
+                                    </div>
+                                </div>
+                                <h5 class="font-size-15">Belum Ada Penugasan</h5>
+                                <p class="text-muted">Belum ada petugas yang ditugaskan</p>
+                            </div>
+                        @endforelse
                     </div>
-                @endforelse
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Case Detail Modal -->
+    <div class="modal fade" id="caseDetailModal" tabindex="-1" aria-labelledby="caseDetailModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="caseDetailModalLabel">Detail Kasus</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body" id="caseDetailContent">
+                    <div class="text-center py-5">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <p class="mt-2 text-muted">Memuat detail kasus...</p>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 
     <!-- Assign Modal -->
-    <div id="assignModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-        <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
-            <div class="mb-4">
-                <h3 class="text-lg font-semibold text-gray-900">Tugaskan Petugas</h3>
-                <p class="text-sm text-gray-600 mt-1">
-                    Case ID: <span id="modalCaseId" class="font-mono font-medium"></span>
-                </p>
+    <div class="modal fade" id="assignModal" tabindex="-1" aria-labelledby="assignModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header" style="background: linear-gradient(45deg, #dc3545 0%, #c82333 100%) !important;">
+                    <h5 class="modal-title text-white" id="assignModalLabel">
+                        <i class="bx bx-user-plus me-2"></i>Tugaskan Petugas
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-info">
+                        <strong>Case ID:</strong> <span id="modalCaseId" class="font-monospace"></span>
+                    </div>
+
+                    <form id="assignForm" method="POST">
+                        @csrf
+                        <div class="mb-3">
+                            <label for="assigned_petugas_id" class="form-label">
+                                Pilih Petugas <span class="text-danger">*</span>
+                            </label>
+                            <select name="assigned_petugas_id" id="assigned_petugas_id" required class="form-select">
+                                <option value="">-- Pilih Petugas --</option>
+                                @foreach ($availablePetugas as $petugas)
+                                    <option value="{{ $petugas->id }}">{{ $petugas->name }}</option>
+                                @endforeach
+                            </select>
+                            @if ($availablePetugas->isEmpty())
+                                <small class="text-danger">
+                                    Tidak ada petugas di unit ini. 
+                                    <a href="{{ route('pimpinan.petugas') }}" class="text-decoration-underline">Tambah petugas</a>
+                                </small>
+                            @endif
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="notes" class="form-label">
+                                Catatan untuk Petugas (Opsional)
+                            </label>
+                            <textarea name="notes" id="notes" rows="3" class="form-control"
+                                placeholder="Instruksi khusus untuk petugas..."></textarea>
+                        </div>
+
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn flex-fill" style="background: linear-gradient(45deg, #dc3545 0%, #c82333 100%) !important; color: white; border: none;">
+                                <i class="bx bx-check me-1"></i> Tugaskan
+                            </button>
+                            <button type="button" class="btn btn-secondary flex-fill" data-bs-dismiss="modal">
+                                <i class="bx bx-x me-1"></i> Batal
+                            </button>
+                        </div>
+                    </form>
+                </div>
             </div>
-
-            <form id="assignForm" method="POST" class="space-y-4">
-                @csrf
-                <div>
-                    <label for="assigned_petugas_id" class="block text-sm font-medium text-gray-700 mb-2">
-                        Pilih Petugas
-                    </label>
-                    <select name="assigned_petugas_id" id="assigned_petugas_id" required
-                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm">
-                        <option value="">-- Pilih Petugas --</option>
-                        @foreach ($availablePetugas as $petugas)
-                            <option value="{{ $petugas->id }}">{{ $petugas->name }}</option>
-                        @endforeach
-                    </select>
-                    @if ($availablePetugas->isEmpty())
-                        <p class="mt-2 text-xs text-red-600">Tidak ada petugas di unit ini. <a
-                                href="{{ route('pimpinan.petugas') }}" class="underline">Tambah petugas</a></p>
-                    @endif
-                </div>
-
-                <div>
-                    <label for="notes" class="block text-sm font-medium text-gray-700 mb-2">
-                        Catatan untuk Petugas (Opsional)
-                    </label>
-                    <textarea name="notes" id="notes" rows="3"
-                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm"
-                        placeholder="Instruksi khusus untuk petugas..."></textarea>
-                </div>
-
-                <div class="flex space-x-3">
-                    <button type="submit"
-                        class="flex-1 bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500">
-                        Tugaskan
-                    </button>
-                    <button type="button" onclick="closeAssignModal()"
-                        class="flex-1 bg-gray-300 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-500">
-                        Batal
-                    </button>
-                </div>
-            </form>
         </div>
     </div>
 
+    <style>
+        .hover-shadow:hover {
+            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.1);
+            transform: translateY(-2px);
+        }
+    </style>
+
     <script>
+        // Show case detail in modal
+        function showCaseDetail(caseId) {
+            const modal = new bootstrap.Modal(document.getElementById('caseDetailModal'));
+            const modalContent = document.getElementById('caseDetailContent');
+            
+            // Show loading
+            modalContent.innerHTML = `
+                <div class="text-center py-5">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p class="mt-2 text-muted">Memuat detail kasus...</p>
+                </div>
+            `;
+            
+            modal.show();
+            
+            // Fetch case details
+            fetch(`/pimpinan/cases/${caseId}`, {
+                headers: {
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    modalContent.innerHTML = data.html;
+                } else {
+                    modalContent.innerHTML = `
+                        <div class="alert alert-danger">
+                            <h6>Error</h6>
+                            <p class="mb-0">${data.message || 'Gagal memuat detail kasus'}</p>
+                        </div>
+                    `;
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                modalContent.innerHTML = `
+                    <div class="alert alert-danger">
+                        <h6>Error</h6>
+                        <p class="mb-0">Terjadi kesalahan saat memuat detail kasus</p>
+                    </div>
+                `;
+            });
+        }
+
+        // Show assign modal
         function showAssignModal(dispatchId, caseId) {
-            const modal = document.getElementById('assignModal');
+            const modal = new bootstrap.Modal(document.getElementById('assignModal'));
             const form = document.getElementById('assignForm');
             const modalCaseId = document.getElementById('modalCaseId');
 
@@ -226,19 +389,7 @@
             modalCaseId.textContent = caseId;
 
             // Show modal
-            modal.classList.remove('hidden');
+            modal.show();
         }
-
-        function closeAssignModal() {
-            const modal = document.getElementById('assignModal');
-            modal.classList.add('hidden');
-        }
-
-        // Close modal when clicking outside
-        document.getElementById('assignModal').addEventListener('click', function(e) {
-            if (e.target === this) {
-                closeAssignModal();
-            }
-        });
     </script>
 @endsection

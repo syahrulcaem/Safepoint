@@ -43,6 +43,13 @@
                             </ul>
                         </li>
 
+                        <li class="{{ request()->routeIs('reports.sla') ? 'mm-active' : '' }}">
+                            <a href="{{ route('reports.sla') }}" class="waves-effect">
+                                <i class="bx bx-bar-chart-alt-2"></i>
+                                <span key="t-reports">Laporan SLA</span>
+                            </a>
+                        </li>
+
                         @if ($userRole === 'SUPERADMIN')
                             <li class="{{ request()->routeIs(['units.*', 'users.*']) ? 'mm-active' : '' }}">
                                 <a href="javascript: void(0);" class="has-arrow waves-effect">
@@ -89,6 +96,13 @@
                                 <span key="t-petugas">Kelola Petugas</span>
                             </a>
                         </li>
+
+                        <li class="{{ request()->routeIs('reports.sla') ? 'mm-active' : '' }}">
+                            <a href="{{ route('reports.sla') }}" class="waves-effect">
+                                <i class="bx bx-bar-chart-alt-2"></i>
+                                <span key="t-reports">Laporan SLA</span>
+                            </a>
+                        </li>
                     @endif
 
                     {{-- PETUGAS MENU --}}
@@ -104,6 +118,13 @@
                             <a href="{{ route('petugas.dashboard') }}" class="waves-effect">
                                 <i class="bx bx-task"></i>
                                 <span key="t-tasks">Tugas Saya</span>
+                            </a>
+                        </li>
+
+                        <li class="{{ request()->routeIs('reports.sla') ? 'mm-active' : '' }}">
+                            <a href="{{ route('reports.sla') }}" class="waves-effect">
+                                <i class="bx bx-bar-chart-alt-2"></i>
+                                <span key="t-reports">Laporan SLA</span>
                             </a>
                         </li>
                     @endif

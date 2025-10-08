@@ -7,6 +7,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\LocationController;
 use App\Http\Controllers\PetugasController;
 use App\Http\Controllers\PimpinanController;
+use App\Http\Controllers\SlaReportController;
 // use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\UnitController;
 use App\Http\Controllers\UserController;
@@ -47,6 +48,11 @@ Route::middleware(['auth'])->prefix('api')->group(function () {
     Route::post('/location/update', [LocationController::class, 'updateLocation'])->name('api.location.update');
     Route::get('/location/user/{userId}', [LocationController::class, 'getUserLocation'])->name('api.location.user');
     Route::get('/location/unit/{unitId?}', [LocationController::class, 'getUnitLocations'])->name('api.location.unit');
+});
+
+// SLA Report - Accessible by all authenticated users
+Route::middleware(['auth'])->group(function () {
+    Route::get('/reports/sla', [SlaReportController::class, 'index'])->name('reports.sla');
 });
 
 // Operator Routes - For SUPERADMIN and OPERATOR
