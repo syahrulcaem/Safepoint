@@ -1,212 +1,191 @@
 @extends('layouts.app')
 
-@section('title', 'Detail Kasus - ' . $case->short_id)
-
 @section('content')
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div class="container-fluid">
         <!-- Header -->
-        <div class="mb-6">
-            <div class="flex items-center justify-between">
-                <div>
-                    <h1 class="text-2xl font-bold text-gray-900">Detail Kasus</h1>
-                    <p class="text-sm text-gray-600 mt-1">
-                        Unit: <span class="font-semibold">{{ $unit->name }}</span> ({{ $unit->type }})
-                    </p>
+        <div class="row">
+            <div class="col-12">
+                <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+                    <div>
+                        <h4 class="mb-sm-0 font-size-18">Detail Kasus - {{ $case->short_id }}</h4>
+                        <p class="text-muted mb-0">Unit: <span class="fw-medium">{{ $unit->name }}</span>
+                            ({{ $unit->type }})</p>
+                    </div>
+                    <div class="page-title-right">
+                        <a href="{{ route('pimpinan.dashboard') }}" class="btn btn-secondary btn-sm">
+                            <i class="bx bx-arrow-back me-1"></i> Kembali
+                        </a>
+                    </div>
                 </div>
-                <a href="{{ route('pimpinan.dashboard') }}"
-                    class="px-4 py-2 bg-gray-100 text-gray-700 text-sm font-medium rounded-md hover:bg-gray-200">
-                    ← Kembali ke Dashboard
-                </a>
             </div>
         </div>
 
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div class="row">
             <!-- Case Information -->
-            <div class="lg:col-span-2 space-y-6">
+            <div class="col-lg-8">
                 <!-- Basic Info Card -->
-                <div class="bg-white rounded-lg shadow">
-                    <div class="px-6 py-4 border-b border-gray-200">
-                        <div class="flex items-center justify-between">
-                            <h2 class="text-lg font-semibold text-gray-900">Informasi Kasus</h2>
+                <div class="card">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center justify-content-between mb-3">
+                            <h5 class="card-title mb-0">Informasi Kasus</h5>
                             <span
-                                class="px-3 py-1 text-sm font-medium rounded-full 
+                                class="badge rounded-pill 
                                 @switch($case->status)
-                                    @case('NEW') bg-blue-100 text-blue-800 @break
-                                    @case('DISPATCHED') @break
-                                    @case('ON_THE_WAY') @break
-                                    @case('ON_SCENE') @break
-                                    @case('CLOSED') @break
-                                    @case('CANCELLED') @break
-                                    @default
+                                    @case('NEW') bg-info @break
+                                    @case('DISPATCHED') bg-warning @break
+                                    @case('ON_THE_WAY') bg-primary @break
+                                    @case('ON_SCENE') bg-secondary @break
+                                    @case('CLOSED') bg-success @break
+                                    @case('CANCELLED') bg-danger @break
+                                    @default bg-secondary
                                 @endswitch">
                                 {{ $case->status }}
                             </span>
                         </div>
-                    </div>
-                    <div class="px-6 py-4 space-y-4">
-                        <div>
-                            <label class="text-sm font-medium text-gray-500">Case ID</label>
-                            <p class="mt-1 text-sm font-mono text-gray-900">{{ $case->short_id }}</p>
-                        </div>
 
-                        <div>
-                            <label class="text-sm font-medium text-gray-500">Kategori</label>
-                            <p class="mt-1 text-sm text-gray-900">
-                                <span class="px-2 py-1 bg-gray-100 rounded">{{ $case->category }}</span>
-                            </p>
-                        </div>
-
-                        <div class="col-span-2">
-                            <label class="text-sm font-medium text-gray-500">Lokasi</label>
-                            <p class="mt-1 text-sm text-gray-900">
-                                {{ $case->locator_text ?? 'N/A' }}
-                            </p>
-                            @if ($case->lat && $case->lon)
-                                <p class="mt-1 text-xs text-gray-500">
-                                    Koordinat: {{ $case->lat }}, {{ $case->lon }}
-                                    (Akurasi: {{ $case->accuracy ?? 'N/A' }}m)
-                                </p>
-
-                                <!-- Map Display -->
-                                <div id="map" class="w-full h-64 rounded-lg border border-gray-300 mt-3"></div>
-
-                                <a href="https://www.google.com/maps?q={{ $case->lat }},{{ $case->lon }}"
-                                    target="_blank"
-                                    class="mt-2 inline-flex items-center text-xs text-red-600 hover:text-red-800">
-                                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                                    </svg>
-                                    Buka di Google Maps
-                                </a>
-                            @endif
-                        </div>
-
-                        <div>
-                            <label class="text-sm font-medium text-gray-500">Nomor Telepon</label>
-                            <p class="mt-1 text-sm text-gray-900">{{ $case->phone ?? 'N/A' }}</p>
-                        </div>
-
-                        @if ($case->reporterUser)
-                            <div>
-                                <label class="text-sm font-medium text-gray-500">Pelapor</label>
-                                <p class="mt-1 text-sm text-gray-900">{{ $case->reporterUser->name }}</p>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label text-muted fw-medium">Case ID</label>
+                                <p class="mb-0"><code>{{ $case->short_id }}</code></p>
                             </div>
-                        @endif
 
-                        <div>
-                            <label class="text-sm font-medium text-gray-500">Waktu Laporan</label>
-                            <p class="mt-1 text-sm text-gray-900">
-                                {{ $case->created_at->format('d F Y, H:i') }} WIB
-                                <span class="text-gray-500">({{ $case->created_at->diffForHumans() }})</span>
-                            </p>
+                            <div class="col-md-6">
+                                <label class="form-label text-muted fw-medium">Kategori</label>
+                                <p class="mb-0">
+                                    <span class="badge bg-light text-dark">{{ $case->category }}</span>
+                                </p>
+                            </div>
+
+                            <div class="col-12">
+                                <label class="form-label text-muted fw-medium">Lokasi</label>
+                                <p class="mb-1">{{ $case->locator_text ?? 'N/A' }}</p>
+                                @if ($case->lat && $case->lon)
+                                    <p class="text-muted small mb-2">
+                                        Koordinat: {{ $case->lat }}, {{ $case->lon }}
+                                        (Akurasi: {{ $case->accuracy ?? 'N/A' }}m)
+                                    </p>
+
+                                    <!-- Map Display -->
+                                    <div id="map" style="width: 100%; height: 300px;" class="rounded border mt-2">
+                                    </div>
+
+                                    <a href="https://www.google.com/maps?q={{ $case->lat }},{{ $case->lon }}"
+                                        target="_blank" class="btn btn-sm btn-outline-danger mt-2">
+                                        <i class="bx bx-map me-1"></i>
+                                        Buka di Google Maps
+                                    </a>
+                                @endif
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label text-muted fw-medium">Nomor Telepon</label>
+                                <p class="mb-0">{{ $case->phone ?? 'N/A' }}</p>
+                            </div>
+
+                            @if ($case->reporterUser)
+                                <div class="col-md-6">
+                                    <label class="form-label text-muted fw-medium">Pelapor</label>
+                                    <p class="mb-0">{{ $case->reporterUser->name }}</p>
+                                </div>
+                            @endif
+
+                            <div class="col-12">
+                                <label class="form-label text-muted fw-medium">Waktu Laporan</label>
+                                <p class="mb-0">
+                                    {{ $case->created_at->format('d F Y, H:i') }} WIB
+                                    <span class="text-muted">({{ $case->created_at->diffForHumans() }})</span>
+                                </p>
+                            </div>
                         </div>
                     </div>
                 </div>
 
                 <!-- Dispatch Info Card -->
-                <div class="bg-white rounded-lg shadow">
-                    <div class="px-6 py-4 border-b border-gray-200">
-                        <h2 class="text-lg font-semibold text-gray-900">Informasi Dispatch</h2>
-                    </div>
-                    <div class="px-6 py-4 space-y-4">
-                        <div>
-                            <label class="text-sm font-medium text-gray-500">Operator yang Dispatch</label>
-                            <p class="mt-1 text-sm text-gray-900">{{ $dispatch->dispatcher->name }}</p>
-                        </div>
+                <div class="card mt-3">
+                    <div class="card-body">
+                        <h5 class="card-title mb-3">Informasi Dispatch</h5>
+                        
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label text-muted fw-medium">Operator yang Dispatch</label>
+                                <p class="mb-0">{{ $dispatch->dispatcher->name }}</p>
+                            </div>
 
-                        <div>
-                            <label class="text-sm font-medium text-gray-500">Waktu Dispatch</label>
-                            <p class="mt-1 text-sm text-gray-900">
-                                {{ $dispatch->dispatched_at->format('d F Y, H:i') }} WIB
-                                <span class="text-gray-500">({{ $dispatch->dispatched_at->diffForHumans() }})</span>
-                            </p>
-                        </div>
-
-                        @if ($dispatch->notes)
-                            <div>
-                                <label class="text-sm font-medium text-gray-500">Catatan dari Operator</label>
-                                <p class="mt-1 text-sm text-gray-900 bg-yellow-50 border border-yellow-200 rounded p-3">
-                                    {{ $dispatch->notes }}
+                            <div class="col-md-6">
+                                <label class="form-label text-muted fw-medium">Waktu Dispatch</label>
+                                <p class="mb-0">
+                                    {{ $dispatch->dispatched_at->format('d F Y, H:i') }} WIB
+                                    <span class="text-muted">({{ $dispatch->dispatched_at->diffForHumans() }})</span>
                                 </p>
                             </div>
-                        @endif
 
-                        @if ($dispatch->assigned_petugas_id)
-                            <div>
-                                <label class="text-sm font-medium text-gray-500">Petugas yang Ditugaskan</label>
-                                <p class="mt-1 text-sm text-gray-900">
-                                    {{ $dispatch->assignedPetugas->name }}
-                                    <span class="text-gray-500">
-                                        - Ditugaskan {{ $dispatch->assigned_at->diffForHumans() }}
-                                    </span>
-                                </p>
-                            </div>
-                        @endif
+                            @if ($dispatch->notes)
+                                <div class="col-12">
+                                    <label class="form-label text-muted fw-medium">Catatan dari Operator</label>
+                                    <div class="alert alert-warning mb-0">
+                                        {{ $dispatch->notes }}
+                                    </div>
+                                </div>
+                            @endif
+
+                            @if ($dispatch->assigned_petugas_id)
+                                <div class="col-12">
+                                    <label class="form-label text-muted fw-medium">Petugas yang Ditugaskan</label>
+                                    <p class="mb-0">
+                                        {{ $dispatch->assignedPetugas->name }}
+                                        <span class="text-muted">
+                                            - Ditugaskan {{ $dispatch->assigned_at->diffForHumans() }}
+                                        </span>
+                                    </p>
+                                </div>
+                            @endif
+                        </div>
                     </div>
                 </div>
 
                 <!-- Timeline -->
-                <div class="bg-white rounded-lg shadow">
-                    <div class="px-6 py-4 border-b border-gray-200">
-                        <h2 class="text-lg font-semibold text-gray-900">Timeline</h2>
-                    </div>
-                    <div class="px-6 py-4">
-                        <div class="flow-root">
-                            <ul class="-mb-8">
-                                @foreach ($case->caseEvents as $index => $event)
-                                    <li>
-                                        <div class="relative pb-8">
-                                            @if (!$loop->last)
-                                                <span class="absolute top-4 left-4 -ml-px h-full w-0.5 bg-gray-200"
-                                                    aria-hidden="true"></span>
-                                            @endif
-                                            <div class="relative flex space-x-3">
+                <div class="card mt-3">
+                    <div class="card-body">
+                        <h5 class="card-title mb-3">Timeline</h5>
+                        
+                        @if($case->caseEvents->count() > 0)
+                            <div class="timeline">
+                                @foreach ($case->caseEvents as $event)
+                                    <div class="timeline-item">
+                                        <div class="timeline-dot bg-danger"></div>
+                                        <div class="timeline-content">
+                                            <div class="d-flex justify-content-between align-items-start">
                                                 <div>
-                                                    <span
-                                                        class="h-8 w-8 rounded-full bg-blue-500 flex items-center justify-center ring-8 ring-white">
-                                                        <svg class="h-5 w-5 text-white" fill="currentColor"
-                                                            viewBox="0 0 20 20">
-                                                            <path fill-rule="evenodd"
-                                                                d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                                                                clip-rule="evenodd" />
-                                                        </svg>
-                                                    </span>
+                                                    <h6 class="mb-1">{{ $event->action }}</h6>
+                                                    @if ($event->notes)
+                                                        <p class="text-muted small mb-0">{{ $event->notes }}</p>
+                                                    @endif
                                                 </div>
-                                                <div class="min-w-0 flex-1 pt-1.5 flex justify-between space-x-4">
-                                                    <div>
-                                                        <p class="text-sm font-medium text-gray-900">{{ $event->action }}
-                                                        </p>
-                                                        @if ($event->notes)
-                                                            <p class="text-sm text-gray-500 mt-1">{{ $event->notes }}</p>
-                                                        @endif
-                                                    </div>
-                                                    <div class="text-right text-sm whitespace-nowrap text-gray-500">
-                                                        {{ $event->created_at->format('H:i') }}
-                                                    </div>
-                                                </div>
+                                                <span class="badge bg-light text-dark">
+                                                    {{ $event->created_at->format('H:i') }}
+                                                </span>
                                             </div>
                                         </div>
-                                    </li>
+                                    </div>
                                 @endforeach
-                            </ul>
-                        </div>
+                            </div>
+                        @else
+                            <p class="text-muted text-center mb-0">Belum ada timeline</p>
+                        @endif
                     </div>
                 </div>
             </div>
 
             <!-- Action Panel -->
-            <div class="lg:col-span-1">
+            <div class="col-lg-4">
                 @if (!$dispatch->assigned_petugas_id)
                     <!-- Assign Petugas Card -->
-                    <div class="bg-white rounded-lg shadow sticky top-4">
-                        <div class="px-6 py-4 border-b border-gray-200 bg-red-50">
-                            <h2 class="text-lg font-semibold text-red-900">Tugaskan Petugas</h2>
-                            <p class="text-sm text-red-700 mt-1">Pilih petugas untuk menangani kasus ini</p>
+                    <div class="card">
+                        <div class="card-header bg-danger text-white">
+                            <h5 class="card-title text-white mb-1">Tugaskan Petugas</h5>
+                            <p class="mb-0 small">Pilih petugas untuk menangani kasus ini</p>
                         </div>
-                        <div class="px-6 py-4">
+                        <div class="card-body">
                             <!-- Success/Error Messages -->
                             @if (session('success'))
                                 <div class="mb-4 bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded-md">
